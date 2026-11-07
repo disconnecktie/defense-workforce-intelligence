@@ -2,81 +2,115 @@
 
 > Public-data analytics for technology workforce demand across the U.S. defense sector.
 
-**Status:** Planning / early development. No production data pipeline or live dashboard exists yet.
+**Status:** Foundation scaffold (TKT-001); no production data ingestion or live analytics yet.
 
 ## Purpose
 
-Defense Workforce Intelligence (DWI) is a planned data intelligence platform for aggregating, normalizing, and analyzing publicly available defense-sector job postings, skill requirements, advertised compensation, locations, and (in a later phase) federal contract awards.
+Defense Workforce Intelligence (DWI) is a planned platform for aggregating, normalizing, and analyzing publicly available defense-sector job postings, skill requirements, advertised compensation, and locations; a later phase may correlate public federal contract awards.
 
-Its goal is to help analysts, job seekers, and technical leaders understand **what skills employers are seeking, where demand is concentrated, and how patterns change over time**.
+The project demonstrates Python, API integration, ETL, normalization, historical analytics, and interactive visualization. It is independent of **Telaryn**, which manages its development; a future Telaryn view may use DWI's versioned API.
 
-## Why it matters
-
-Defense technology hiring information is spread across corporate career sites, federal job boards, and public datasets. DWI aims to transform those fragmented sources into a transparent, reproducible analytical view rather than another job listing site.
-
-The project also demonstrates practical capabilities in Python development, API integration, ETL, data quality, historical analysis, backend engineering, and interactive data visualization.
-
-## Planned initial capabilities (MVP)
-
-- Collect postings from selected public, permitted job feeds.
-- Normalize employers, job titles, locations, and technical skills.
-- Deduplicate postings while retaining first-seen/last-seen history.
-- Explore posting counts by employer, region, skill, and source.
-- Compare **advertised** compensation only where available, including salary type, currency, and reporting completeness.
-- Drill down to source postings with clear attribution and observation timestamps.
-- Display coverage, extraction confidence, and data freshness.
-
-The initial geographic focus is **Augusta, GA / Fort Eisenhower; Fort Meade, MD; and San Antonio, TX**. Coverage will expand based on verified feed availability.
-
-## Planned architecture
+## Repository layout
 
 ```text
-Permitted public feeds
-       |
-       v
-Python collectors -> validation / normalization -> PostgreSQL
-                                                   |
-                                                   v
-                                              FastAPI (v1)
-                                                   |
-                                        +----------+----------+
-                                        |                     |
-                                   React dashboard     Future Telaryn view
+backend/                 FastAPI app and Python smoke tests
+frontend/                React + TypeScript + Vite app
+database/                Local PostgreSQL instructions
+docs/                    Project charter, architecture, data-source evaluation
+.github/workflows/       Continuous integration checks
+docker-compose.yml       Local PostgreSQL service
+.env.example             Local backend/database settings (sample only)
 ```
 
-**Proposed stack:** Python, FastAPI, PostgreSQL, React, TypeScript, Docker, and automated tests.
+## Prerequisites
 
-**Project management:** Development work is tracked in **Telaryn**. DWI will remain an independent application and repository, with a versioned API suitable for a future Telaryn integration.
+- **Python 3.11+** and pip
+- **Node.js 22+** and npm
+- **Docker** with the Docker Compose plugin (for PostgreSQL)
+- Git
 
-## Roadmap
+These commands assume a terminal in the cloned repository. The API and frontend run as local processes; Docker Compose runs the database only.
 
-1. **Foundation:** repo standards, local development, database schema, test setup.
-2. **Ingestion:** validate source access; ingest, normalize, deduplicate, and retain historical observations.
-3. **Analytics API:** source-aware aggregation and filterable summary endpoints.
-4. **Dashboard:** geographic, skill, employer, and salary views with transparent data caveats.
-5. **Advanced analysis:** historical changes, clearance mention extraction, and careful contract-award correlations.
-6. **Deployment and documentation:** public demonstration, repeatable builds, monitoring, and security hardening.
+## Quick start — Linux, macOS, or Git Bash
 
-See [project charter](docs/project-charter.md), [architecture](docs/architecture.md), and [source evaluation](docs/data-sources.md).
+```sh
+git clone https://github.com/disconnecktie/defense-workforce-intelligence.git
+cd defense-workforce-intelligence
+cp .env.example .env
+docker compose up -d db
+docker compose ps
+```
 
-## Data integrity and limitations
+In **terminal 1**, start FastAPI:
 
-- **Not a comprehensive census:** job-feed availability varies by employer and platform; all charts will disclose collection coverage.
-- **Postings are not hires:** posting volume is a proxy for advertised demand, not verified employment growth.
-- **Salary coverage is incomplete:** reported salary ranges are not total compensation and should not be treated as an accurate market median without sampling context.
-- **Clearance mentions are not clearance verification:** extracted text describes job requirements, not an applicant's status.
-- **Contract awards do not prove causation:** relationships to posting activity will be labeled as correlations, with timing and entity-matching limitations.
-- **Respect source rules:** use only permitted sources and comply with API terms, rate limits, licensing, and attribution requirements.
-- **No sensitive or private data:** never commit secrets, credentials, personal applications, or restricted information.
+```sh
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
 
-## Getting started
+On Windows PowerShell, use `.venv\Scripts\Activate.ps1` to activate the venv instead. If activation is restricted, invoke `.venv\Scripts\python.exe` directly.
 
-Implementation instructions will be added with the first scaffold ticket. This repository currently contains project planning artifacts only.
+In **terminal 2** (from repository root), start React:
 
-## Contributing and license
+```sh
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
 
-Contributions and licensing terms will be established before accepting outside contributions. **Public visibility does not by itself grant an open-source license.**
+Open **http://127.0.0.1:5173**. The page should display **API online** if FastAPI is running. To verify it directly:
 
-## Disclaimer
+```sh
+curl http://127.0.0.1:8000/health
+# {"status":"ok","service":"dwi-api"}
+```
 
-Independent portfolio project. Not affiliated with or endorsed by the U.S. Department of Defense, any federal agency, employer, or recruiting platform.
+The versioned endpoint is `http://127.0.0.1:8000/api/v1/health`; OpenAPI docs are at `http://127.0.0.1:8000/docs`.
+
+### Windows PowerShell notes
+
+At repository root, use `Copy-Item .env.example .env` instead of `cp` if desired. In `frontend`, run `Copy-Item .env.example .env`. In `backend`, activate with `.venv\Scripts\Activate.ps1`, then use the same `python -m pip` and `python -m uvicorn` commands.
+
+## Verify each component
+
+- **PostgreSQL:** `docker compose exec db pg_isready -U dwi -d dwi` should report `accepting connections`.
+- **API:** `curl http://127.0.0.1:8000/health` should return HTTP 200 and the JSON shown above.
+- **React:** `http://127.0.0.1:5173` should render the DWI foundation page.
+- **Backend tests:** from `backend`, run `python -m pytest -q`.
+- **Frontend build:** from `frontend`, run `npm run build`.
+
+A GitHub Actions workflow runs the API tests, frontend type-check/build, and a PostgreSQL smoke test on pull requests.
+
+**Important:** The API health endpoint checks only API liveness, **not** database readiness. Database connectivity and schemas are not yet implemented; reporting **API online** does not imply that PostgreSQL is connected.
+
+## Configuration and security
+
+- Root `.env.example` contains disposable PostgreSQL credentials and a future-use database URL; copy it to the untracked `.env` before using Compose.
+- `frontend/.env.example` contains `VITE_API_BASE_URL` for the browser (defaults to `http://127.0.0.1:8000`). Vite exposes `VITE_` variables publicly: **never put secrets in them**.
+- The backend defaults to CORS for local Vite origins only. Set `DWI_CORS_ORIGINS` in its **process environment** for other origins; root `.env` is not automatically loaded by the FastAPI process.
+- The database binds only to `127.0.0.1` on the development machine. Do not use these example credentials for deployment.
+- Do not commit real credentials, applicant personal data, or restricted material.
+
+Use `docker compose down` to stop the database and preserve its local data. **`docker compose down -v` deletes the database volume**.
+
+## Planned MVP
+
+1. Collect public job postings from a small cohort of permitted sources.
+2. Normalize employers, geography, technical skills, and supplied salary fields.
+3. Deduplicate source records while retaining observations over time.
+4. Provide source-attributed, versioned analytical API endpoints.
+5. Visualize verified employer, region, and skill trends in the React dashboard.
+
+Initial regions: **Augusta / Fort Eisenhower**, **Fort Meade**, and **San Antonio**, subject to source coverage.
+
+See [project charter](docs/project-charter.md), [architecture](docs/architecture.md), and [data-source evaluation](docs/data-sources.md).
+
+## Data limitations and disclaimer
+
+Posting counts represent *advertised positions*, not hires or total labor demand. Salary coverage is incomplete, clearance mentions do not verify clearance status, and contract-award timing cannot establish causation. DWI will disclose coverage and source attribution. No scraping that violates source terms.
+
+Independent portfolio project. Not affiliated with or endorsed by the U.S. Department of Defense or any federal agency. No open-source license has been selected; public visibility does not itself grant reuse rights.
