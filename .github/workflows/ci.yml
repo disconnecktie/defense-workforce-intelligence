@@ -1,0 +1,89 @@
+name: DWI foundation checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  api:
+    name: FastAPI tests and startup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install API and test dependencies
+        run: python -m pip install -e ".[dev]"
+        working-directory: backend
+      - name: Test API
+        run: python -m pytest -q
+        working-directory: backend
+      - name: Start Uvicorn and check HTTP endpoint
+        working-directory: backend
+        shell: bash
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent --show-error http://127.0.0.1:8000/health -o /tmp/dwi-health.json; then
+              python -c "import json; assert json.load(open('/tmp/dwi-health.json')) == {'status': 'ok', 'service': 'dwi-api'}"
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+
+  frontend:
+    name: React build and startup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: frontend
+      - name: Type-check and build
+        run: npm run build
+        working-directory: frontend
+      - name: Start Vite and verify page responds
+        working-directory: frontend
+        shell: bash
+        run: |
+          npm run dev > /tmp/dwi-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:5173/ | grep -q 'id="root"'; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/dwi-vite.log
+          exit 1
+
+  database:
+    name: PostgreSQL smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start local database
+        run: docker compose up -d db
+      - name: Verify PostgreSQL responds
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if docker compose exec -T db pg_isready -U dwi -d dwi; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs db
+          exit 1
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
