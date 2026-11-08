@@ -2,7 +2,7 @@
 
 > Public-data analytics for technology workforce demand across the U.S. defense sector.
 
-**Status:** TKT-003's Greenhouse ingestion implementation and 122-test offline suite were merged into `main` in [PR #3](https://github.com/disconnecktie/defense-workforce-intelligence/pull/3). Live employer-data persistence remains disabled pending source-use authorization; analytical API and dashboard are not yet implemented.
+**Status:** TKT-003's Greenhouse ingestion implementation and 122-test offline suite were merged into `main` in [PR #3](https://github.com/disconnecktie/defense-workforce-intelligence/pull/3). A versioned, synthetic-only current-postings read endpoint is in development. Live employer-data persistence remains disabled pending source-use authorization; market aggregates and dashboard are not yet implemented.
 
 ## Purpose
 
@@ -96,6 +96,12 @@ A GitHub Actions workflow runs the API tests, frontend type-check/build, and a P
 - Do not commit real credentials, applicant personal data, or restricted material.
 
 Use `docker compose down` to stop the database and preserve its local data. **`docker compose down -v` deletes the database volume**.
+
+## Experimental postings read API (synthetic only)
+
+The first versioned read endpoint, `GET /api/v1/postings`, supports limit/offset pagination, a case-insensitive exact employer-name filter, and source attribution. It is intentionally **off by default** (`503`) and restricts results to the uniquely labeled synthetic records created by the PostgreSQL smoke harness.
+
+See the [postings API contract and safe local validation walkthrough](docs/postings-api.md). For a local test against the isolated `dwi_ingestion_test` database only, set `DWI_POSTINGS_API_ENABLED=1` in the backend process environment before starting Uvicorn. This flag does **not** grant third-party source-use permission, and the route must not be publicly deployed in this development state.
 
 ## Planned MVP
 

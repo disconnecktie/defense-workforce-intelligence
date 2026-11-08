@@ -7,7 +7,11 @@ Uses a fresh synthetic source for each invocation, so rerunning is safe.
 import os
 from uuid import uuid4
 
+from fastapi.testclient import TestClient
 from sqlalchemy import func, select
+
+from app.api.postings import get_postings_session
+from app.main import app
 
 from app.db import make_session_factory
 from app.ingestion.pipeline import ingest_board
@@ -88,4 +92,45 @@ with factory() as session:
     assert run.duration_ms == fourth.duration_ms
     assert run.started_at is not None and run.finished_at is not None
 
+# Validate the new FastAPI contract against the actual PostgreSQL schema,
+# without querying real employers or changing stored ingestion data.
+def test_session():
+    with factory() as session:
+        yield session
+
+
+original_enabled = os.environ.get("DWI_POSTINGS_API_ENABLED")
+app.dependency_overrides[get_postings_session] = test_session
+os.environ["DWI_POSTINGS_API_ENABLED"] = "1"
+try:
+    with TestClient(app) as client:
+        response = client.get(
+            "/api/v1/postings",
+            params={"employer": employer_name, "limit": 2},
+        )
+    assert response.status_code == 200, response.text
+    page = response.json()
+    assert page["data_scope"] == "synthetic_only", page
+    assert page["counting_rule"] == "distinct_source_postings", page
+    assert page["total"] == 1 and len(page["items"]) == 1, page
+    assert page["page_sources"] == [{
+        "platform": "greenhouse",
+        "board_token": board_token,
+        "employer": employer_name,
+    }], page
+    item = page["items"][0]
+    assert item["title"] == "Synthetic Senior Systems Engineer", item
+    assert item["source"]["board_token"] == board_token, item
+    assert item["source"]["external_posting_id"] == "8080001", item
+    assert item["first_seen_at"] <= item["last_seen_at"], item
+    assert page["latest_observed_at"] == item["last_seen_at"], page
+finally:
+    app.dependency_overrides.pop(get_postings_session, None)
+    if original_enabled is None:
+        os.environ.pop("DWI_POSTINGS_API_ENABLED", None)
+    else:
+        os.environ["DWI_POSTINGS_API_ENABLED"] = original_enabled
+
 print("Synthetic PostgreSQL ingestion: insert/repeat/update/history/metrics PASS")
+print("Synthetic PostgreSQL API: filtered source-attributed GET /api/v1/postings PASS")
+
