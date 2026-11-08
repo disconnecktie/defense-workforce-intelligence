@@ -53,3 +53,13 @@ Reported CLI JSON confirmed `mode: "read-only preview (no database writes)"`, `b
 | 5271672007 | 2027 Business Operations Engineer Intern |
 
 This establishes that the **TKT-003 Python collector**, not merely an ad hoc PowerShell GET from TKT-002, successfully retrieved live public listing metadata from the selected board. The invocation did not request persistence or write to PostgreSQL. It does not resolve third-party bulk storage or redistribution permissions. The developer has also reported 17 passing local pytest tests. Local Alembic revision remains to be separately verified; GitHub CI passed its PostgreSQL migration and synthetic ingestion checks.
+
+## Public terms research — preliminary, not legal approval (2026-11-08)
+
+- [Greenhouse Job Board API](https://docs.greenhouse.io/job-board): publicly available GET responses require **no authentication**. The documentation presents the API primarily for publishing a company's own careers pages. It does **not** expressly grant third-party historical storage, bulk aggregation, or redistribution rights.
+- [Greenhouse API overview (updated November 2, 2026)](https://support.greenhouse.io/hc/en-us/articles/10568627186203-Greenhouse-API-overview): the Job Board API is designed for a company's own career/application site; Greenhouse warns that requests **may be rate limited** for traffic/security reasons.
+- [Greenhouse User Agreement](https://my.greenhouse.io/users/agreement): contains restrictions on automated access, resale, and certain uses of the service for covered users. Its applicability to an unauthenticated public board GET by an unaffiliated researcher is **not established** by this review.
+- [Greenhouse Master Subscription Agreement](https://www.greenhouse.com/master-subscription-agreement): contains API limits and customer/fair-use provisions for contracting customers. **Do not claim this proves authorization or prohibition for an unaffiliated user of public GET endpoints** without a more specific terms analysis.
+- Employer-specific conditions and permission for DWI's proposed reuse of the Anduril board have **not** been confirmed.
+
+**Decision:** retain the default preview-only mode and manual, synthetic-data tests. Do not represent TKT-003's source-authorization acceptance criterion as complete. Before production collection, seek clear authorization/licensing for storing historical metadata and derived analytics, including employer restrictions and polling cadence. Consider a documented permissively licensed alternative if this cannot be established.
