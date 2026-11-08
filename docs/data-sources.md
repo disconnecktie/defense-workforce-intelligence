@@ -21,3 +21,13 @@ Sources must be evaluated individually for access, permitted use, coverage, rate
 ## External source restrictions
 
 No bypass of access controls, no scraping contrary to published terms, and no publication of private applicant or contact information. Retain only data necessary for the analysis and follow applicable source retention requirements.
+
+## TKT-002 source selection (2026-11-08)
+
+**First adapter: Greenhouse public Job Board API.** Candidate pilot employer: Anduril Industries (`andurilindustries` board token), subject to verifying the live source and acceptable access/retention conditions. This choice is based on API structure, lack of GET authentication, public posting identifiers, and optional description/office/department content—not on an assumption of complete defense-market coverage.
+
+- [Detailed ingestion plan](ingestion-plan.md) — source comparison, request, validation and error handling, success conditions.
+- [Initial data dictionary](data-dictionary.md) — source fields, nullable values, identity/deduplication, skill/clearance/location normalization.
+- **Next validation gate:** make a real read-only GET from the development workstation, inspect field completeness, and record source terms. This environment has **not** directly confirmed the current Greenhouse feed response.
+
+**Caveat:** Other employers may use Lever, Workday, or proprietary systems. USAJOBS covers federal civilian hiring and should not be mixed into defense-contractor counts without separate source labels. No historical trend should be shown until DWI has accumulated real dated observations.
