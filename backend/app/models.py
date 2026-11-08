@@ -57,6 +57,9 @@ class IngestionRun(Base):
     unchanged: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     rejected: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     errors: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Reason counts summarize malformed/duplicate records without their contents.
+    rejection_reasons: Mapped[dict[str, int] | None] = mapped_column(JSON, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text)
 
 class PostingObservation(Base):
