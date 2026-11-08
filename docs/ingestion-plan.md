@@ -7,7 +7,7 @@
 ## Decision and rationale
 
 **Recommended first adapter:** Greenhouse **public Job Board API** (read-only GET).  
-**First pilot employer:** Anduril Industries, **candidate** board token `andurilindustries`; live API access from the DWI development machine has **not yet been verified**.
+**First pilot employer:** Anduril Industries, confirmed reachable via public board token `andurilindustries` from the developer's Windows workstation on 2026-11-08; source usage and republication terms remain to be reviewed before automated ingestion.
 
 Why Greenhouse first:
 - Published job data is structured JSON without a read API key.
@@ -48,7 +48,21 @@ $r.jobs | Select-Object -First 5 id,title,updated_at,absolute_url,
   @{Name='location';Expression={$_.location.name}} | Format-Table
 ```
 
-If 404, access denied, or the board ID is invalid, select another verified Greenhouse employer before implementation. A third-party listing suggests that this employer has a Greenhouse board, but this research environment could not query the live API endpoint directly. **Do not count the pilot as source-validated until the workstation GET succeeds and the results are reviewed.**
+### Live response evidence (developer workstation; 2026-11-08)
+
+The developer ran the read-only `Invoke-RestMethod` request against `https://boards-api.greenhouse.io/v1/boards/andurilindustries/jobs` from PowerShell and reported **2,600 returned jobs**. Five displayed rows each showed a numeric posting `id`, job `title`, `updated_at` timestamp and `absolute_url` (URLs truncated by PowerShell table display). Example source records in the first five included:
+
+| Posting ID | Job title | Source updated-at |
+| --- | --- | --- |
+| 4802172007 | 2026 Early Career Electrical Engineer | 2026-11-02T16:27:19-05:00 |
+| 5176254007 | 2026 Early Career Manufacturing Engineer | 2026-11-02T16:27:19-05:00 |
+| 4802167007 | 2026 Early Career Mechanical Engineer | 2026-11-02T16:27:19-05:00 |
+| 4802146007 | 2026 Early Career Software Engineer | 2026-11-02T16:27:19-05:00 |
+| 5271672007 | 2027 Business Operations Engineer Intern | 2026-11-02T16:27:19-05:00 |
+
+**Validation conclusion:** endpoint and token work from the development machine; the returned collection and sample fields support the first-adapter choice. These are **user-reported, non-archived response observations**, not independent replicated server captures. They do not yet establish uniqueness of every returned record, salary/clearance completeness, accuracy by geographic market, consent to republish descriptions, or permission for scheduled automated collection. These are explicit implementation gates.
+
+**Next field audit:** request `?content=true`, inspect field names, missing-value rates and sample content on a bounded subset, and independently review terms/rate limits before storing full descriptions.
 
 ## Collection contract
 
@@ -81,7 +95,7 @@ If 404, access denied, or the board ID is invalid, select another verified Green
 
 Create a new Telaryn development ticket for **Greenhouse Pilot Collector & Data Validation** after reviewing this plan.
 
-Initial acceptance criteria should include successful permitted live API GET, verified board token, schema/type validation, idempotent upsert, run-level logging, first/last seen tracking, and source-coverage reports. Data-source choice is provisional until the access/terms check passes.
+Initial acceptance criteria should include successful permitted live API GET, verified board token, schema/type validation, idempotent upsert, run-level logging, first/last seen tracking, and source-coverage reports. Source connectivity and sample structural fields are verified; permission/retention and full field-quality checks remain implementation gates.
 
 ## Supporting references
 
