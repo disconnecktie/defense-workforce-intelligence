@@ -98,6 +98,11 @@ jobs:
           python -m alembic upgrade head
           python -m alembic current
           docker compose -f ../docker-compose.yml exec -T db psql -U dwi -d dwi -c "\\dt"
+      - name: Verify synthetic PostgreSQL ingestion is idempotent
+        working-directory: backend
+        env:
+          DWI_TEST_DATABASE_URL: postgresql+psycopg://dwi:dwi_local_only@127.0.0.1:5432/dwi
+        run: python scripts/postgres_smoke.py
       - name: Cleanup
         if: always()
         run: docker compose down -v
