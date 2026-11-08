@@ -34,3 +34,22 @@
 Source/employer, URLs and terms reviewed, date, reviewer, allowed fields and frequency, retention/deletion requirement, attribution/citation requirement, and decision (approved/restricted/not approved).
 
 **Disposition:** Initial collector development and synthetic DB testing may proceed. Do not mark the source-permission acceptance criterion complete until the actual conditions have been assessed.
+
+## TKT-003 Python collector live preview validation (developer workstation, 2026-11-08)
+
+Developer ran:
+```powershell
+.\.venv\Scripts\python.exe -m app.ingestion --board andurilindustries
+```
+
+Reported CLI JSON confirmed `mode: "read-only preview (no database writes)"`, `board: "andurilindustries"`, `fetched: 2600`, and five sample posting ID/title pairs:
+
+| Source ID | Title |
+| --- | --- |
+| 4802172007 | 2026 Early Career Electrical Engineer |
+| 5176254007 | 2026 Early Career Manufacturing Engineer |
+| 4802167007 | 2026 Early Career Mechanical Engineer |
+| 4802146007 | 2026 Early Career Software Engineer |
+| 5271672007 | 2027 Business Operations Engineer Intern |
+
+This establishes that the **TKT-003 Python collector**, not merely an ad hoc PowerShell GET from TKT-002, successfully retrieved live public listing metadata from the selected board. The invocation did not request persistence or write to PostgreSQL. It does not resolve third-party bulk storage or redistribution permissions. The developer has also reported 17 passing local pytest tests. Local Alembic revision remains to be separately verified; GitHub CI passed its PostgreSQL migration and synthetic ingestion checks.
