@@ -84,6 +84,20 @@ jobs:
           done
           docker compose logs db
           exit 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend DB dependencies
+        working-directory: backend
+        run: python -m pip install -e ".[dev]"
+      - name: Run ingestion migrations and verify tables
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg://dwi:dwi_local_only@127.0.0.1:5432/dwi
+        run: |
+          python -m alembic upgrade head
+          python -m alembic current
+          docker compose -f ../docker-compose.yml exec -T db psql -U dwi -d dwi -c "\\dt"
       - name: Cleanup
         if: always()
         run: docker compose down -v
