@@ -2,7 +2,7 @@
 
 > Public-data analytics for technology workforce demand across the U.S. defense sector.
 
-**Status:** TKT-003's Greenhouse ingestion implementation and 122-test offline suite were merged into `main` in [PR #3](https://github.com/disconnecktie/defense-workforce-intelligence/pull/3). A versioned, synthetic-only current-postings read endpoint is in development. Live employer-data persistence remains disabled pending source-use authorization; market aggregates and dashboard are not yet implemented.
+**Status:** TKT-003 Greenhouse ingestion and the versioned, synthetic-only postings read API are merged into `main`. An interactive React Postings Explorer is in development using **only synthetic integration-test records**. Live employer-data persistence remains disabled pending source-use authorization; actual market aggregates and employer-data analytics are not yet implemented.
 
 ## Purpose
 
@@ -102,6 +102,12 @@ Use `docker compose down` to stop the database and preserve its local data. **`d
 The first versioned read endpoint, `GET /api/v1/postings`, supports limit/offset pagination, a case-insensitive exact employer-name filter, and source attribution. It is intentionally **off by default** (`503`) and restricts results to the uniquely labeled synthetic records created by the PostgreSQL smoke harness.
 
 See the [postings API contract and safe local validation walkthrough](docs/postings-api.md). For a local test against the isolated `dwi_ingestion_test` database only, set `DWI_POSTINGS_API_ENABLED=1` in the backend process environment before starting Uvicorn. This flag does **not** grant third-party source-use permission, and the route must not be publicly deployed in this development state.
+
+## React Postings Explorer (synthetic development preview)
+
+The React application now includes a read-only, database-backed synthetic postings explorer with an employer-name filter, page size and Previous/Next controls, source attribution, and explicit disabled/loading/error/empty states.
+
+For setup and a browser validation checklist, see [Postings Explorer](docs/postings-explorer.md). The frontend expects the local FastAPI server to have `DWI_POSTINGS_API_ENABLED=1` and its `DATABASE_URL` to point to your **isolated** `dwi_ingestion_test` database. The route remains disabled by default and must not be enabled for public deployments.
 
 ## Planned MVP
 
