@@ -1,8 +1,12 @@
-"""Ingest one successful Greenhouse snapshot into an auditable relational model."""
+"""Ingest one Greenhouse snapshot with safe structured run logs and metrics."""
 
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import json
+import logging
+from time import perf_counter
 from typing import Any
 
 from sqlalchemy import select
@@ -11,6 +15,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.ingestion.greenhouse import fetch_jobs, validated_token
 from app.ingestion.normalize import InvalidPosting, NormalizedPosting, normalize_job
 from app.models import Employer, IngestionRun, Posting, PostingObservation, Source
+
+
+LOGGER = logging.getLogger("dwi.ingestion")
 
 
 @dataclass(frozen=True)
@@ -23,10 +30,49 @@ class RunSummary:
     unchanged: int
     rejected: int
     errors: int
+    duration_ms: int
+    rejection_reasons: dict[str, int]
 
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _elapsed_ms(started: float) -> int:
+    """Use a monotonic clock, not wall-clock timestamps, for elapsed time."""
+    return max(0, round((perf_counter() - started) * 1000))
+
+
+def _log_run(level: int, event: str, **fields: str | int | dict[str, int]) -> None:
+    """Emit one machine-readable JSON record without raw source/error content."""
+    LOGGER.log(level, json.dumps({"event": event, **fields}, sort_keys=True))
+
+
+def _rejection_code(error: Exception) -> str:
+    """Map known validation failures into bounded, non-sensitive categories."""
+    if not isinstance(error, InvalidPosting):
+        return "malformed_record"
+    message = str(error).lower()
+    if "posting id" in message:
+        return "invalid_posting_id"
+    if "title" in message:
+        return "invalid_title"
+    if "url" in message:
+        return "invalid_url"
+    if "location" in message:
+        return "invalid_location"
+    if "date" in message or "timezone" in message:
+        return "invalid_timestamp"
+    if "internal_job_id" in message or "requisition_id" in message:
+        return "invalid_optional_id"
+    return "malformed_record"
+
+
+def _safe_error_message(error: Exception) -> str:
+    """Do not persist network exception text, URLs, tokens, or posting bodies."""
+    if isinstance(error, ValueError) and str(error).startswith("Conflicting records for posting ID"):
+        return "ValueError: Conflicting records for posting ID"
+    return f"{type(error).__name__}: ingestion failed"
 
 
 def _get_source(session: Session, board_token: str, employer_name: str) -> Source:
@@ -84,51 +130,70 @@ def ingest_board(
     employer_name: str,
     fetcher: Callable[[str], list[dict[str, Any]]] = fetch_jobs,
 ) -> RunSummary:
-    """Create a run, fetch the entire feed, then persist one atomic observation batch.
+    """Persist an atomic observation batch, keeping reliable run diagnostics.
 
-    A failed fetch or storage transaction never marks existing postings inactive.
-    Concurrent ingestion runs for the same board are not supported in this MVP.
+    A failed fetch/storage step never changes existing postings or observations.
+    Fetched count survives a failed processing transaction when the fetch succeeded.
+    Concurrent ingestion runs on the same board remain unsupported.
     """
     token = validated_token(board_token)
     if not employer_name.strip():
         raise ValueError("Employer name is required.")
+    started_clock = perf_counter()
+
     with factory() as session:
         source = _get_source(session, token, employer_name.strip())
         run = IngestionRun(
             source_id=source.id, started_at=utcnow(), status="running",
-            fetched=0, inserted=0, updated=0, unchanged=0, rejected=0, errors=0,
+            fetched=0, inserted=0, updated=0, unchanged=0, rejected=0,
+            errors=0, rejection_reasons={},
         )
         session.add(run)
         session.commit()
         run_id = run.id
         source_id = source.id
 
+    _log_run(logging.INFO, "ingestion_started", run_id=run_id, source_id=source_id,
+             board_token=token)
+    phase = "fetch"
     try:
         jobs = fetcher(token)
         if not isinstance(jobs, list):
             raise ValueError("Fetcher must return an array of jobs.")
+
+        # Store how many records arrived *outside* the atomic posting transaction.
+        # A later rollback must not make it appear that zero jobs were retrieved.
         with factory() as session:
             run = session.get(IngestionRun, run_id)
             if run is None:
                 raise RuntimeError("Ingestion run was not found.")
             run.fetched = len(jobs)
+            session.commit()
+
+        phase = "processing"
+        rejected_reasons: Counter[str] = Counter()
+        with factory() as session:
+            run = session.get(IngestionRun, run_id)
+            if run is None:
+                raise RuntimeError("Ingestion run was not found.")
             now = utcnow()
             seen: dict[str, str] = {}
             for raw in jobs:
                 try:
                     job = normalize_job(raw)
-                except (InvalidPosting, TypeError, AttributeError):
+                except (InvalidPosting, TypeError, AttributeError) as invalid:
                     run.rejected += 1
+                    rejected_reasons[_rejection_code(invalid)] += 1
                     continue
                 previous_hash = seen.get(job.external_posting_id)
                 if previous_hash is not None:
                     if previous_hash != job.content_hash:
-                        # An internally inconsistent feed cannot safely establish
-                        # a current version. Roll back the entire observation batch.
+                        # An ambiguous feed rolls back the entire observation batch.
                         raise ValueError(
                             f"Conflicting records for posting ID {job.external_posting_id}"
                         )
                     run.rejected += 1
+                    rejected_reasons["duplicate_in_feed"] += 1
                     continue
                 seen[job.external_posting_id] = job.content_hash
                 existing = session.scalar(
@@ -166,23 +231,52 @@ def ingest_board(
                     observed_at=now, content_hash=job.content_hash, event=event,
                     snapshot=_metadata_snapshot(job) if event in ("inserted", "updated") else None,
                 ))
+            run.rejection_reasons = dict(rejected_reasons)
             run.status = "succeeded"
             run.finished_at = utcnow()
+            run.duration_ms = _elapsed_ms(started_clock)
             summary = RunSummary(
-                run_id=run_id, status="succeeded", fetched=run.fetched,
+                run_id=run_id, status=run.status, fetched=run.fetched,
                 inserted=run.inserted, updated=run.updated,
                 unchanged=run.unchanged, rejected=run.rejected, errors=run.errors,
+                duration_ms=run.duration_ms,
+                rejection_reasons=dict(rejected_reasons),
             )
+            assert summary.fetched == (
+                summary.inserted + summary.updated + summary.unchanged + summary.rejected
+            )
+            phase = "commit"
             session.commit()
-            return summary
+        _log_run(
+            logging.INFO, "ingestion_succeeded", run_id=run_id, source_id=source_id,
+            board_token=token, fetched=summary.fetched, inserted=summary.inserted,
+            updated=summary.updated, unchanged=summary.unchanged,
+            rejected=summary.rejected, errors=summary.errors,
+            rejection_reasons=summary.rejection_reasons,
+            duration_ms=summary.duration_ms,
+        )
+        return summary
     except Exception as exc:
-        # An interrupted/invalid fetch is not evidence of vacancy closure.
-        with factory() as session:
-            run = session.get(IngestionRun, run_id)
-            if run is not None:
-                run.status = "failed"
-                run.errors = 1
-                run.error_message = f"{type(exc).__name__}: {exc}"[:1000]
-                run.finished_at = utcnow()
-                session.commit()
+        # Keep a failure record and duration, but not rolled-back partial counts,
+        # raw exception text, job IDs, URLs, applicant data, or tokens.
+        duration_ms = _elapsed_ms(started_clock)
+        try:
+            with factory() as session:
+                run = session.get(IngestionRun, run_id)
+                if run is not None:
+                    run.status = "failed"
+                    run.errors = 1
+                    run.error_message = _safe_error_message(exc)
+                    run.duration_ms = duration_ms
+                    run.finished_at = utcnow()
+                    session.commit()
+        except Exception as record_failure:
+            _log_run(logging.ERROR, "ingestion_failure_record_error",
+                     run_id=run_id, source_id=source_id,
+                     error_type=type(record_failure).__name__)
+        _log_run(
+            logging.ERROR, "ingestion_failed", run_id=run_id, source_id=source_id,
+            board_token=token, phase=phase, error_type=type(exc).__name__,
+            errors=1, duration_ms=duration_ms,
+        )
         raise
