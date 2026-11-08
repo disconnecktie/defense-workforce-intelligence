@@ -107,7 +107,7 @@ def test_unparseable_json_is_rejected():
 
 @pytest.mark.parametrize("unsafe_board", [
     "https://boards-api.greenhouse.io/v1/boards/foo",
-    "localhost",
+    "board%2Fsubpath",
     "a/b",
     "../secrets",
     "board?content=true",
