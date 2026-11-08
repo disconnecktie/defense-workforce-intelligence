@@ -1,9 +1,10 @@
 """Ingestion data model. Run 'alembic upgrade head' before writing data."""
 
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import (
-    DateTime, ForeignKey, Integer, String, Text, UniqueConstraint,
+    JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -67,3 +68,6 @@ class PostingObservation(Base):
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     event: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Immutable metadata snapshot on insert/update, absent on unchanged observations.
+    # Existing pre-migration observations cannot be backfilled from hashes alone.
+    snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
