@@ -2,7 +2,7 @@
 
 > Public-data analytics for technology workforce demand across the U.S. defense sector.
 
-**Status:** Foundation scaffold (TKT-001); no production data ingestion or live analytics yet.
+**Status:** TKT-003 ingestion implementation in development. Read-only Greenhouse preview and database models are available on the feature branch; persistence remains gated pending source-use review. No live analytics.
 
 ## Purpose
 
@@ -114,3 +114,42 @@ See [project charter](docs/project-charter.md), [architecture](docs/architecture
 Posting counts represent *advertised positions*, not hires or total labor demand. Salary coverage is incomplete, clearance mentions do not verify clearance status, and contract-award timing cannot establish causation. DWI will disclose coverage and source attribution. No scraping that violates source terms.
 
 Independent portfolio project. Not affiliated with or endorsed by the U.S. Department of Defense or any federal agency. No open-source license has been selected; public visibility does not itself grant reuse rights.
+
+## TKT-003 — Greenhouse collector (under development)
+
+The first read-only adapter targets a **configured employer board**, initially `andurilindustries`. It uses Greenhouse's published GET endpoint and fetches **metadata only** (no descriptions, applicant fields, or candidate information). **It is not scheduled** and does not automatically run when FastAPI starts.
+
+From the repository root (PowerShell):
+
+```powershell
+docker compose up -d db
+cd backend
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe -m app.ingestion --board andurilindustries
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+If there is no virtual environment yet, create it from `backend` with `python -m venv .venv`. The default collector command performs a read-only **preview**, prints a posting count and a five-row sample, and **does not write to PostgreSQL**.
+
+### Persistence — explicit review required
+
+A successful public API GET does not imply permission to bulk store and redistribute employer data. Before any full persistence, review [source-use controls](docs/source-usage-review.md) and applicable Greenhouse/employer conditions. Once the review is complete and permission is established, explicitly enable persistence in the backend process:
+
+```powershell
+$env:DWI_SOURCE_USE_APPROVED = "1"
+.\.venv\Scripts\python.exe -m app.ingestion --board andurilindustries --employer "Anduril Industries" --persist
+```
+
+**Do not set the approval flag until the permission/retention review is resolved.** The flag is a local operational control, not evidence of permission. The command is manually invoked; no polling cadence or scheduler is configured. The pilot currently persists only metadata, including title, source URL and location label, not full HTML descriptions.
+
+To inspect a database **after a permitted persistence run** (from repository root):
+
+```powershell
+docker compose exec -T db psql -U dwi -d dwi -c "SELECT status, fetched, inserted, updated, unchanged, rejected, errors FROM ingestion_runs ORDER BY id DESC LIMIT 5;"
+docker compose exec -T db psql -U dwi -d dwi -c "SELECT COUNT(*) FROM postings;"
+```
+
+The local database DSN defaults to `postgresql+psycopg://dwi:dwi_local_only@127.0.0.1:5432/dwi`, matching the sample Compose credentials; override `DATABASE_URL` in the backend's process environment for any non-local environment. Never reuse local example credentials for deployment. The Alembic migration creates `employers`, `sources`, `postings`, `ingestion_runs`, and `posting_observations`.
+
+**Implementation limitations:** No parallel runs against the same employer board; no automatic vacancy closures, job skill extraction, salary inference, or dashboard API. The database stores the first/last **observed** timestamps separately from Greenhouse's `updated_at`. The source is not guaranteed to represent full defense hiring demand.

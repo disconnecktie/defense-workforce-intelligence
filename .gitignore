@@ -37,3 +37,6 @@ data/processed/
 Thumbs.db
 .idea/
 .vscode/
+
+# Generated Python package metadata
+*.egg-info/
