@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 
 from app.db import make_session_factory
 from app.ingestion.pipeline import ingest_board
-from app.models import Posting, PostingObservation, Source
+from app.models import IngestionRun, Posting, PostingObservation, Source
 
 
 url = os.environ.get("DWI_TEST_DATABASE_URL")
@@ -50,6 +50,17 @@ third = ingest_board(
 assert (first.inserted, first.unchanged, first.updated) == (1, 0, 0), first
 assert (second.inserted, second.unchanged, second.updated) == (0, 1, 0), second
 assert (third.inserted, third.unchanged, third.updated) == (0, 0, 1), third
+fourth = ingest_board(
+    factory, board_token=board_token, employer_name=employer_name,
+    fetcher=lambda _: [
+        updated_record, updated_record, {**record, "id": None},
+    ],
+)
+assert (fourth.fetched, fourth.unchanged, fourth.rejected, fourth.errors) == (3, 1, 2, 0), fourth
+assert fourth.rejection_reasons == {
+    "duplicate_in_feed": 1, "invalid_posting_id": 1,
+}
+assert fourth.duration_ms >= 0
 
 with factory() as session:
     source = session.scalar(select(Source).where(Source.board_token == board_token))
@@ -63,12 +74,18 @@ with factory() as session:
         select(PostingObservation).where(PostingObservation.posting_id == post.id)
         .order_by(PostingObservation.id)
     ).all()
-    assert [event.event for event in history] == ["inserted", "unchanged", "updated"]
+    assert [event.event for event in history] == ["inserted", "unchanged", "updated", "unchanged"]
     assert history[0].snapshot["title_raw"] == "Synthetic Systems Engineer"
     assert history[1].snapshot is None
     assert history[2].snapshot["title_raw"] == "Synthetic Senior Systems Engineer"
     assert history[0].content_hash != history[2].content_hash
     assert post.title_raw == "Synthetic Senior Systems Engineer"
     assert post.first_seen_at <= post.last_seen_at
+    run = session.get(IngestionRun, fourth.run_id)
+    assert run.fetched == 3
+    assert (run.inserted, run.updated, run.unchanged, run.rejected, run.errors) == (0, 0, 1, 2, 0)
+    assert run.rejection_reasons == fourth.rejection_reasons
+    assert run.duration_ms == fourth.duration_ms
+    assert run.started_at is not None and run.finished_at is not None
 
-print("Synthetic PostgreSQL ingestion: insert/repeat/update/history PASS")
+print("Synthetic PostgreSQL ingestion: insert/repeat/update/history/metrics PASS")
