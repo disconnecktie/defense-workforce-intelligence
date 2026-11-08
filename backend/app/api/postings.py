@@ -132,12 +132,6 @@ def list_postings(
 
     # Count and latest observation cover ALL filtered postings, not just this
     # page; the separate page_sources property covers only returned rows.
-    base = (
-        select(Posting)
-        .join(Source, Posting.source_id == Source.id)
-        .join(Employer, Source.employer_id == Employer.id)
-        .where(*filters)
-    )
     total = session.scalar(
         select(func.count(Posting.id))
         .select_from(Posting)
