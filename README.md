@@ -107,7 +107,7 @@ See the [postings API contract and safe local validation walkthrough](docs/posti
 
 The React application now includes a read-only, database-backed synthetic postings explorer with an employer-name filter, page size and Previous/Next controls, source attribution, and explicit disabled/loading/error/empty states.
 
-For setup, screenshots and a browser validation checklist, see [Postings Explorer](docs/postings-explorer.md). The frontend expects the local FastAPI server to have `DWI_POSTINGS_API_ENABLED=1` and its `DATABASE_URL` to point to your **isolated** `dwi_ingestion_test` database. The route remains disabled by default and must not be enabled for public deployments.
+For setup and a browser validation checklist, see [Postings Explorer](docs/postings-explorer.md). The frontend expects the local FastAPI server to have `DWI_POSTINGS_API_ENABLED=1` and its `DATABASE_URL` to point to your **isolated** `dwi_ingestion_test` database. The route remains disabled by default and must not be enabled for public deployments.
 
 ## Planned MVP
 
