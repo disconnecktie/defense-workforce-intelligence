@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.postings import router as postings_router
+from app.api.coverage import router as coverage_router
 
 app = FastAPI(
     title="Defense Workforce Intelligence API",
@@ -32,6 +33,7 @@ app.add_middleware(
 
 # This endpoint is explicitly opt-in and only selects synthetic test sources.
 app.include_router(postings_router)
+app.include_router(coverage_router)
 
 
 @app.get("/health", tags=["health"])
