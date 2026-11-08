@@ -108,6 +108,23 @@ try:
             "/api/v1/postings",
             params={"employer": employer_name, "limit": 2},
         )
+        coverage_response = client.get(
+            "/api/v1/coverage",
+            params={"employer": employer_name, "limit": 2},
+        )
+    assert coverage_response.status_code == 200, coverage_response.text
+    coverage = coverage_response.json()
+    assert coverage["data_scope"] == "synthetic_only", coverage
+    assert coverage["total_sources"] == 1 and coverage["total_employers"] == 1, coverage
+    assert coverage["totals"]["posting_count"] == 1, coverage
+    assert coverage["totals"]["location_present"] == 1, coverage
+    assert coverage["totals"]["location_coverage_pct"] == 100.0, coverage
+    assert coverage["totals"]["first_published_at_present"] == 0, coverage
+    assert coverage["totals"]["published_date_coverage_pct"] == 0.0, coverage
+    assert coverage["totals"]["source_updated_at_present"] == 1, coverage
+    assert coverage["sources"][0]["board_token"] == board_token, coverage
+    assert coverage["sources"][0]["metrics"]["posting_count"] == 1, coverage
+    assert coverage["sources"][0]["latest_observed_at"] == coverage["latest_observed_at"], coverage
     assert response.status_code == 200, response.text
     page = response.json()
     assert page["data_scope"] == "synthetic_only", page
@@ -133,4 +150,5 @@ finally:
 
 print("Synthetic PostgreSQL ingestion: insert/repeat/update/history/metrics PASS")
 print("Synthetic PostgreSQL API: filtered source-attributed GET /api/v1/postings PASS")
+print("Synthetic PostgreSQL API: source coverage completeness GET /api/v1/coverage PASS")
 
