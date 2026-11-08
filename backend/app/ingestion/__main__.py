@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import logging
 import os
 
 from app.db import make_session_factory
@@ -22,6 +23,8 @@ def main() -> int:
                 "Persistence disabled until source-use and retention review is completed. "
                 "Set DWI_SOURCE_USE_APPROVED=1 only after approval."
             )
+        # JSONL event records go to stderr; the final run summary remains stdout.
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
         result = ingest_board(make_session_factory(), board_token=board, employer_name=args.employer)
         print(json.dumps(result.__dict__, indent=2))
     else:
