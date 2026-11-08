@@ -88,7 +88,7 @@ def test_total_page_metadata_and_per_item_source_provenance(api):
     assert (data["total"], data["limit"], data["offset"]) == (4, 25, 0)
     assert data["next_offset"] is None
     assert len(data["items"]) == 4
-    assert data["latest_observed_at"].endswith("+00:00")
+    assert data["latest_observed_at"].endswith(("Z", "+00:00"))
     assert len(data["page_sources"]) == 2
     assert {source["board_token"] for source in data["page_sources"]} == {
         "synthetic_alpha", "synthetic_beta",
@@ -99,9 +99,9 @@ def test_total_page_metadata_and_per_item_source_provenance(api):
         assert item["source"]["board_token"].startswith("synthetic_")
         assert item["source"]["external_posting_id"].isdigit()
         assert item["source"]["url"].startswith("https://example.org/")
-        assert item["first_seen_at"].endswith("+00:00")
-        assert item["last_seen_at"].endswith("+00:00")
-        assert item["source_updated_at"].endswith("+00:00")
+        assert item["first_seen_at"].endswith(("Z", "+00:00"))
+        assert item["last_seen_at"].endswith(("Z", "+00:00"))
+        assert item["source_updated_at"].endswith(("Z", "+00:00"))
         assert item["location_raw"] == "Synthetic Test City, GA"
         assert item["first_published_at"] is None
     # Same numeric posting ID from two different boards is two source postings.
