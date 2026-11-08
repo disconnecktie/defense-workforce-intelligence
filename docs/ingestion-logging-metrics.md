@@ -1,6 +1,6 @@
 # TKT-003 — Ingestion Logging and Metrics
 
-**Status:** Implemented and covered by synthetic CI tests on `feature/tkt-003-greenhouse-ingestion`. This does not authorize persisting employer job data.
+**Status:** Implemented and merged into `main` via [PR #3](https://github.com/disconnecktie/defense-workforce-intelligence/pull/3); the synthetic test suite and PostgreSQL smoke passed on the merged commit. This does **not** authorize persisting employer job data.
 
 ## Run lifecycle
 
@@ -49,31 +49,9 @@ The collector's normal read-only preview remains unchanged; `--persist` still re
 
 ## Validate with synthetic data only
 
-From `C:\dev\defense-workforce-intelligence\backend`:
+Use the [ST-024 end-to-end validation runbook](ingestion-end-to-end-validation.md), which checks out the merged `main` branch and directs migrations and synthetic PostgreSQL smoke runs **only** to a dedicated disposable test database. It includes the expected `0003_ingestion_run_metrics (head)` migration revision, test result requirements and safe cleanup.
 
-```powershell
-git pull --ff-only origin feature/tkt-003-greenhouse-ingestion
-.\.venv\Scripts\python.exe -m pytest -q
-$env:DWI_TEST_DATABASE_URL = "postgresql+psycopg://dwi:dwi_local_only@127.0.0.1:5432/dwi_ingestion_test"
-$env:DATABASE_URL = $env:DWI_TEST_DATABASE_URL
-.\.venv\Scripts\python.exe -m alembic upgrade head
-.\.venv\Scripts\python.exe -m alembic current
-.\.venv\Scripts\python.exe scripts\postgres_smoke.py
-Remove-Item Env:\DWI_TEST_DATABASE_URL
-Remove-Item Env:\DATABASE_URL
-```
-
-Expected Alembic revision: `0003_ingestion_run_metrics` (head). Expected smoke output: `Synthetic PostgreSQL ingestion: insert/repeat/update/history/metrics PASS`.
-
-The test suite uses synthetic records only. The PostgreSQL smoke requires an explicitly configured **isolated test database**, not live employer data or production. It uses a distinct synthetic board token for every run.
-
-After a smoke test, inspect the **isolated test DB** if desired:
-
-```sql
-SELECT id, status, fetched, inserted, updated, unchanged, rejected,
-       errors, duration_ms, rejection_reasons
-FROM ingestion_runs ORDER BY id DESC LIMIT 5;
-```
+The existing test suite contains synthetic records only; the smoke harness requires an explicit `DWI_TEST_DATABASE_URL` and generates unique synthetic board tokens. It never contacts Greenhouse or imports live employer data.
 
 ## MVP limitations
 

@@ -2,7 +2,7 @@
 
 > Public-data analytics for technology workforce demand across the U.S. defense sector.
 
-**Status:** TKT-003 ingestion implementation in development. Read-only Greenhouse preview and database models are available on the feature branch; persistence remains gated pending source-use review. No live analytics.
+**Status:** TKT-003's Greenhouse ingestion implementation and 122-test offline suite were merged into `main` in [PR #3](https://github.com/disconnecktie/defense-workforce-intelligence/pull/3). Live employer-data persistence remains disabled pending source-use authorization; analytical API and dashboard are not yet implemented.
 
 ## Purpose
 
@@ -85,7 +85,7 @@ At repository root, use `Copy-Item .env.example .env` instead of `cp` if desired
 
 A GitHub Actions workflow runs the API tests, frontend type-check/build, and a PostgreSQL smoke test on pull requests.
 
-**Important:** The API health endpoint checks only API liveness, **not** database readiness. Database connectivity and schemas are not yet implemented; reporting **API online** does not imply that PostgreSQL is connected.
+**Important:** The API health endpoint checks only API liveness, **not** database readiness. PostgreSQL tables and Alembic migrations now exist for the ingestion pipeline, but reporting **API online** still does not imply PostgreSQL is connected.
 
 ## Configuration and security
 
@@ -115,9 +115,9 @@ Posting counts represent *advertised positions*, not hires or total labor demand
 
 Independent portfolio project. Not affiliated with or endorsed by the U.S. Department of Defense or any federal agency. No open-source license has been selected; public visibility does not itself grant reuse rights.
 
-## TKT-003 — Greenhouse collector (under development)
+## TKT-003 — Greenhouse collector (merged; live persistence gated)
 
-The first read-only adapter targets a **configured employer board**, initially `andurilindustries`. It uses Greenhouse's published GET endpoint and fetches **metadata only** (no descriptions, applicant fields, or candidate information). **It is not scheduled** and does not automatically run when FastAPI starts.
+The merged read-only adapter targets a **configured employer board**, initially `andurilindustries`. It uses Greenhouse's published GET endpoint and fetches **metadata only** (no descriptions, applicant fields, or candidate information). **It is not scheduled** and does not automatically run when FastAPI starts. For the approved technical-validation procedure on synthetic records, see the [ST-024 operator runbook](docs/ingestion-end-to-end-validation.md).
 
 From the repository root (PowerShell):
 
