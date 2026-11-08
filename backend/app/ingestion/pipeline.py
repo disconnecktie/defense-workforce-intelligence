@@ -47,6 +47,25 @@ def _get_source(session: Session, board_token: str, employer_name: str) -> Sourc
     return source
 
 
+def _metadata_snapshot(value: NormalizedPosting) -> dict[str, str | int | None]:
+    """Versioned public metadata only; no HTML, applicant data or inferred fields."""
+    return {
+        "snapshot_schema_version": 1,
+        "external_posting_id": value.external_posting_id,
+        "title_raw": value.title_raw,
+        "source_url": value.source_url,
+        "location_raw": value.location_raw,
+        "source_internal_job_id": value.source_internal_job_id,
+        "requisition_id": value.requisition_id,
+        "first_published_at": (
+            value.first_published_at.isoformat() if value.first_published_at else None
+        ),
+        "source_updated_at": (
+            value.source_updated_at.isoformat() if value.source_updated_at else None
+        ),
+    }
+
+
 def _update_posting(post: Posting, value: NormalizedPosting) -> None:
     post.title_raw = value.title_raw
     post.location_raw = value.location_raw
@@ -94,17 +113,24 @@ def ingest_board(
                 raise RuntimeError("Ingestion run was not found.")
             run.fetched = len(jobs)
             now = utcnow()
-            seen: set[str] = set()
+            seen: dict[str, str] = {}
             for raw in jobs:
                 try:
                     job = normalize_job(raw)
                 except (InvalidPosting, TypeError, AttributeError):
                     run.rejected += 1
                     continue
-                if job.external_posting_id in seen:
+                previous_hash = seen.get(job.external_posting_id)
+                if previous_hash is not None:
+                    if previous_hash != job.content_hash:
+                        # An internally inconsistent feed cannot safely establish
+                        # a current version. Roll back the entire observation batch.
+                        raise ValueError(
+                            f"Conflicting records for posting ID {job.external_posting_id}"
+                        )
                     run.rejected += 1
                     continue
-                seen.add(job.external_posting_id)
+                seen[job.external_posting_id] = job.content_hash
                 existing = session.scalar(
                     select(Posting).where(
                         Posting.source_id == source_id,
@@ -138,6 +164,7 @@ def ingest_board(
                 session.add(PostingObservation(
                     posting_id=existing.id, ingestion_run_id=run_id,
                     observed_at=now, content_hash=job.content_hash, event=event,
+                    snapshot=_metadata_snapshot(job) if event in ("inserted", "updated") else None,
                 ))
             run.status = "succeeded"
             run.finished_at = utcnow()
