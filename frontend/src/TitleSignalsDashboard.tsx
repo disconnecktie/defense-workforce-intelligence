@@ -85,12 +85,15 @@ function isTitleSignalsReport(value: unknown): value is TitleSignalsReport {
   ) return false
 
   const terms = report.terms as unknown[]
+  // Capture validated primitive before entering the callback; mutable object
+  // properties are not narrowed across function boundaries by TypeScript.
+  const scannedCount = report.postings_scanned as number
   return CANONICAL_TERMS.every((canonical) => terms.some((value) => {
     if (!value || typeof value !== 'object') return false
     const item = value as Record<string, unknown>
     return item.term === canonical
       && isNonnegativeInteger(item.postings_with_title_mention)
-      && item.postings_with_title_mention <= report.postings_scanned
+      && item.postings_with_title_mention <= scannedCount
       && Array.isArray(item.examples)
       && item.examples.length <= 3
       && item.examples.every(isExample)
