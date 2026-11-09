@@ -51,7 +51,7 @@ When reviewing this branch before merging:
 
 5. Open http://127.0.0.1:5173 and scroll to **Technology title mentions**.
 
-For the operator's observed snapshot of seven synthetic postings across five test boards, including two explicit-term fixture titles, the expected metrics are:
+For the operator's observed snapshot of seven synthetic postings across six test boards, including two explicit-term fixture titles, the expected metrics are:
 
 | Measure | Expected |
 | --- | ---: |
