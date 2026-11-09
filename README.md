@@ -2,7 +2,7 @@
 
 > Public-data analytics for technology workforce demand across the U.S. defense sector.
 
-**Status:** TKT-003 Greenhouse ingestion and the versioned, synthetic-only postings read API are merged into `main`. An interactive React Postings Explorer is in development using **only synthetic integration-test records**. Live employer-data persistence remains disabled pending source-use authorization; actual market aggregates and employer-data analytics are not yet implemented.
+**Status:** TKT-003 Greenhouse ingestion, the versioned synthetic-only postings read API, React Postings Explorer, and source-completeness API have been merged into `main`. A React Data Quality Dashboard is in development. Live employer-data persistence remains disabled pending source-use authorization; real market aggregates and employer-data analytics are not yet implemented.
 
 ## Purpose
 
@@ -108,6 +108,12 @@ See the [postings API contract and safe local validation walkthrough](docs/posti
 The React application now includes a read-only, database-backed synthetic postings explorer with an employer-name filter, page size and Previous/Next controls, source attribution, and explicit disabled/loading/error/empty states.
 
 For setup and a browser validation checklist, see [Postings Explorer](docs/postings-explorer.md). The frontend expects the local FastAPI server to have `DWI_POSTINGS_API_ENABLED=1` and its `DATABASE_URL` to point to your **isolated** `dwi_ingestion_test` database. The route remains disabled by default and must not be enabled for public deployments.
+
+## Data Quality Dashboard (synthetic development preview)
+
+The frontend includes an interactive source-coverage and metadata-completeness panel powered by `GET /api/v1/coverage`. It shows the number of stored source-specific postings, synthetic sources and employers, and measured field completeness for raw location, source publication date and source update date. These metrics are **not** a measure of real defense-sector workforce coverage.
+
+The postings explorer's exact-employer filter applies to both views. Viewers can page through synthetic source boards, inspect timestamps and see explicit missing/disabled/error states. See [Data Quality Dashboard](docs/data-quality-dashboard.md) for a local browser walkthrough. Use only the isolated `dwi_ingestion_test` database and the local `DWI_POSTINGS_API_ENABLED=1` development flag.
 
 ## Planned MVP
 
