@@ -2,7 +2,7 @@
 
 > Public-data analytics for technology workforce demand across the U.S. defense sector.
 
-**Status:** TKT-003 Greenhouse ingestion, the versioned synthetic-only postings read API, React Postings Explorer, and source-completeness API have been merged into `main`. A React Data Quality Dashboard is in development. Live employer-data persistence remains disabled pending source-use authorization; real market aggregates and employer-data analytics are not yet implemented.
+**Status:** Greenhouse metadata ingestion, the versioned synthetic-only postings and source-coverage APIs, React Postings Explorer, and Data Quality Dashboard have been merged into `main`. A conservative, synthetic-only title-term signal API is now in development. Live employer-data persistence remains disabled pending source-use authorization; real skill-demand and workforce-market analysis are not implemented.
 
 ## Purpose
 
@@ -114,6 +114,12 @@ For setup and a browser validation checklist, see [Postings Explorer](docs/posti
 The frontend includes an interactive source-coverage and metadata-completeness panel powered by `GET /api/v1/coverage`. It shows the number of stored source-specific postings, synthetic sources and employers, and measured field completeness for raw location, source publication date and source update date. These metrics are **not** a measure of real defense-sector workforce coverage.
 
 The postings explorer's exact-employer filter applies to both views. Viewers can page through synthetic source boards, inspect timestamps and see explicit missing/disabled/error states. See [Data Quality Dashboard](docs/data-quality-dashboard.md) for a local browser walkthrough. Use only the isolated `dwi_ingestion_test` database and the local `DWI_POSTINGS_API_ENABLED=1` development flag.
+
+## Experimental title-term signals (synthetic only)
+
+The new read-only `GET /api/v1/title-signals` endpoint counts **literal technology names mentioned in stored posting titles**, with evidence snippets and source-posting references. It returns seven controlled terms and distinguishes matched from unmatched titles. **These are not verified required skills, skill-demand estimates, or real labor-market statistics.** Descriptions are not available in the current metadata schema.
+
+It inherits the local-only `DWI_POSTINGS_API_ENABLED=1` gate and synthetic-source restrictions from the postings API. The PostgreSQL smoke test adds two entirely fictitious title records so the endpoint can be tested with nonzero title-term counts. See [Title Signal API](docs/title-signals-api.md) for the contract and validation walkthrough.
 
 ## Planned MVP
 
