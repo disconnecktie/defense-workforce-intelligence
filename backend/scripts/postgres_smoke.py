@@ -92,6 +92,32 @@ with factory() as session:
     assert run.duration_ms == fourth.duration_ms
     assert run.started_at is not None and run.finished_at is not None
 
+# Add two more explicitly synthetic titles to exercise *positive* keyword
+# matches in PostgreSQL. These are invented fixtures, not real source data.
+signal_board = "synthetic_" + uuid4().hex[:16]
+signal_employer = "Synthetic CI Employer " + signal_board
+signal_fixture = [
+    {
+        "id": 9090001,
+        "title": "Synthetic Python / AWS Platform Engineer",
+        "absolute_url": "https://example.org/synthetic/title-signals/9090001",
+        "location": {"name": "Synthetic Test City"},
+        "updated_at": "2026-11-08T08:00:00-05:00",
+    },
+    {
+        "id": 9090002,
+        "title": "Synthetic K8s and React.js Developer",
+        "absolute_url": "https://example.org/synthetic/title-signals/9090002",
+        "location": None,
+        "updated_at": "2026-11-08T08:00:00-05:00",
+    },
+]
+signal_ingestion = ingest_board(
+    factory, board_token=signal_board, employer_name=signal_employer,
+    fetcher=lambda _: signal_fixture,
+)
+assert signal_ingestion.inserted == 2 and signal_ingestion.errors == 0, signal_ingestion
+
 # Validate the new FastAPI contract against the actual PostgreSQL schema,
 # without querying real employers or changing stored ingestion data.
 def test_session():
@@ -112,6 +138,28 @@ try:
             "/api/v1/coverage",
             params={"employer": employer_name, "limit": 2},
         )
+        title_signal_response = client.get(
+            "/api/v1/title-signals",
+            params={"employer": signal_employer},
+        )
+    assert title_signal_response.status_code == 200, title_signal_response.text
+    signals = title_signal_response.json()
+    assert signals["data_scope"] == "synthetic_only", signals
+    assert signals["source_field"] == "title_raw", signals
+    assert signals["method_version"] == "title_keywords_v1", signals
+    assert signals["postings_scanned"] == 2, signals
+    assert signals["postings_with_any_term"] == 2, signals
+    assert signals["title_mention_rate_pct"] == 100.0, signals
+    counts = {term["term"]: term["postings_with_title_mention"] for term in signals["terms"]}
+    assert counts == {
+        "Python": 1, "Kubernetes": 1, "AWS": 1, "Azure": 0,
+        "Docker": 0, "PostgreSQL": 0, "React": 1,
+    }, counts
+    assert all(
+        evidence["title"][evidence["match_start"]:evidence["match_end"]]
+        == evidence["evidence"]
+        for term in signals["terms"] for evidence in term["examples"]
+    ), signals
     assert coverage_response.status_code == 200, coverage_response.text
     coverage = coverage_response.json()
     assert coverage["data_scope"] == "synthetic_only", coverage
@@ -151,4 +199,5 @@ finally:
 print("Synthetic PostgreSQL ingestion: insert/repeat/update/history/metrics PASS")
 print("Synthetic PostgreSQL API: filtered source-attributed GET /api/v1/postings PASS")
 print("Synthetic PostgreSQL API: source coverage completeness GET /api/v1/coverage PASS")
+print("Synthetic PostgreSQL API: explicit title keyword GET /api/v1/title-signals PASS")
 
