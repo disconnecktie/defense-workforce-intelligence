@@ -7,7 +7,8 @@ This module deliberately does not authorize source access.
 import json
 import os
 from dataclasses import dataclass
-from urllib.parse import urlsplit
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
 
 from app.ingestion.greenhouse import validated_token
 
@@ -69,23 +70,40 @@ def require_pilot_source(board_token: str, employer: str, *, environ=None) -> Pi
 
 
 def require_private_pilot_database(*, environ=None) -> str:
-    """Fail closed unless a distinct localhost PostgreSQL DB was selected.
+    """Require an explicit local PostgreSQL pilot DB distinct by database name.
 
-    This check is a configuration guard, not a network isolation guarantee.
-    Database permissions and firewall rules remain separately necessary.
+    Validate parsed SQLAlchemy connection identities rather than comparing raw
+    URLs: different credentials, port syntax or host aliases must not bypass
+    the distinction. This remains a configuration guard, not a substitute for
+    actual PostgreSQL roles, networking policy, or operator review.
     """
     env = os.environ if environ is None else environ
-    url = env.get("DWI_PILOT_DATABASE_URL", "")
-    parsed = urlsplit(url)
-    if parsed.scheme not in ("postgresql", "postgresql+psycopg"):
+    raw = env.get("DWI_PILOT_DATABASE_URL", "")
+    try:
+        pilot = make_url(raw)
+    except (ArgumentError, TypeError, ValueError) as exc:
+        raise ValueError("Pilot database URL is invalid.") from exc
+    if pilot.drivername not in ("postgresql", "postgresql+psycopg"):
         raise ValueError("Pilot storage requires a PostgreSQL URL.")
-    if parsed.hostname not in ("127.0.0.1", "localhost", "::1"):
+    if pilot.host not in ("127.0.0.1", "localhost", "::1"):
         raise ValueError("Pilot database must be local-only.")
-    if not parsed.path.strip("/").endswith("_pilot"):
+    if pilot.port not in (None, 5432):
+        raise ValueError("Pilot database must use the expected local PostgreSQL port 5432.")
+    if not pilot.database or not pilot.database.endswith("_pilot") or "/" in pilot.database:
         raise ValueError("Pilot database name must end in _pilot.")
-    if not parsed.username or not parsed.password:
+    if not pilot.username or not pilot.password:
         raise ValueError("Pilot database requires explicit credentials.")
+    if pilot.query:
+        raise ValueError("Pilot database URL must not specify additional connection options.")
+
+    # Use an injected effective application URL for tests, otherwise resolve
+    # the real process configuration (including its local default).
     from app.db import database_url
-    if url.replace("postgresql://", "postgresql+psycopg://", 1) == database_url():
-        raise ValueError("Pilot database must be separate from application database.")
-    return url
+    app_raw = env.get("DATABASE_URL", database_url())
+    try:
+        app = make_url(app_raw)
+    except (ArgumentError, TypeError, ValueError) as exc:
+        raise ValueError("Application database URL is invalid.") from exc
+    if app.database and pilot.database == app.database:
+        raise ValueError("Pilot database must have a different database name from the application database.")
+    return raw
