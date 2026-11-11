@@ -3,8 +3,9 @@
 **Assessment date:** 2026-11-11  
 **Telaryn reference:** TKT-CE8W-WSG2-C3D9  
 **Related implementation blocker:** TKT-003 (Greenhouse job ingestion)  
-**Intended use:** Personal, noncommercial research, engineering education, and portfolio demonstration. No sale of datasets, paid analytics, commercial service, or competing job board is planned. Public source code is intended; collected records should remain private and the product should direct visitors to original employer/Greenhouse sources rather than substitute for them.\n**Status:** Preliminary research; authorization for live automated collection and retention NOT established.  
-**Decision for new live collection, persistence, and public redistribution:** **NO-GO pending source-specific authorization and applicable terms review.**
+**Intended use:** Personal, noncommercial research, engineering education, and portfolio demonstration. No sale of datasets, paid analytics, commercial service, or competing job board is planned. Public source code is intended; collected records should remain private and the product should direct visitors to original employer/Greenhouse sources rather than substitute for them.  
+**Status:** Preliminary research; authorization for live automated collection and retention NOT established.  
+**Decision:** Continue engineering toward a manually initiated, opt-in, local metadata pilot. Verify applicable source conditions before requests and keep recurring harvesting and public redistribution disabled. Greenhouse clarification is pending; this is risk acceptance, **not verified authorization**.
 
 This assessment evaluates a personal noncommercial portfolio project, not a commercial data business. Public publication of code does not imply publication of real third-party data. This assessment is a project compliance risk control rather than legal advice. It must not be treated as a license to use any data. It does not modify the ingestion pipeline or enable any live persistence.
 
@@ -96,7 +97,26 @@ Thank you.
 - **TKT-003 relationship:** Keep its source-use authorization acceptance criterion open until the approvals are documented; completion of research alone does NOT constitute permission.
 - **Technical controls:** Leave current synthetic-only gates and disabled-by-default behavior unchanged; no modification to code or infrastructure is authorized by TKT-012.
 
-## Scope distinctions for decision-making\n\n1. **Public GitHub code and synthetic screenshots:** The stated portfolio goal, with no need to expose real posting records. Continue.\n2. **Personal, noncommercial local analysis of public metadata:** Lower redistribution exposure than a public dataset, but automated access and retention conditions remain to be reviewed. Not assumed automatically permitted or prohibited.\n3. **Publicly hosted dashboard using real employer records:** A separate, optional use case; not part of the currently stated scope. Assess again if pursued.\n4. **Selling data, paid analytics, or a competing product:** Explicitly outside scope. Do not characterize DWI as intending these uses.\n\n## Remaining review required before final sign-off
+## Scope distinctions for decision-making\n\n1. **Public GitHub code and synthetic screenshots:** The stated portfolio goal, with no need to expose real posting records. Continue.\n2. **Personal, noncommercial local analysis of public metadata:** Lower redistribution exposure than a public dataset, but automated access and retention conditions remain to be reviewed. Not assumed automatically permitted or prohibited.\n3. **Publicly hosted dashboard using real employer records:** A separate, optional use case; not part of the currently stated scope. Assess again if pursued.\n4. **Selling data, paid analytics, or a competing product:** Explicitly outside scope. Do not characterize DWI as intending these uses.\n\n## Owner-directed pilot decision (2026-11-11)
+
+The owner confirmed that DWI is intended as personal, noncommercial research and portfolio demonstration, not a commercial data service or competing job board. An inquiry was sent to Greenhouse and a support ticket was requested; the outcome remains pending. Examples of other products using the API **do not grant rights** to DWI.
+
+The owner wants development to proceed toward a small, limited local pilot rather than freeze progress. This is **documented acceptance of unresolved source-use uncertainty**, not a legal determination of permission.
+
+**Required controls before any pilot run:**
+
+1. Use only documented public GET endpoints for boards whose applicable rules permit the intended access; do not bypass authentication, robots restrictions, rate limits, or other access controls.
+2. Use an explicit employer/board allowlist and manual execution. Default off; no background scheduling or unrestricted crawling.
+3. Minimize fields to employer, board identifier, source posting ID, title, location, source URL, source update time, and observation timestamps. Do not fetch descriptions, application forms, candidate information, or personal contact data.
+4. Store raw observations in a private local database only. Never commit collected data, make downloadable datasets, or expose a real-data search UI.
+5. Preserve provenance, original links, and a clear disclaimer that observed listings are not verified vacancies, closures, hires, or demand.
+6. Use cautious pacing and 429/5xx backoff; no arbitrary claim of an approved request quota.
+7. Implement a per-source stop switch and deletion path before activation; respond promptly to Greenhouse/employer objections or restrictions.
+8. Keep a record of applicable terms and any correspondence before broadening board coverage. Review Greenhouse's response before scheduling recurring runs or publicly showing live-data aggregates.
+
+**Current decision boundary:** Build the opt-in pilot and its safeguards; do not treat this ticket as a source license. Public site remains synthetic-only, and production/recurring ingestion is out of scope.
+
+## Remaining review required before final sign-off
 
 - Confirm applicable Greenhouse terms for DWI's exact access pattern with the source owner or qualified counsel; draft outreach is included above but not sent.
 - Review terms of each target employer's own career website/job board, including any robots policy where relevant.
