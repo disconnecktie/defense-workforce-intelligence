@@ -25,15 +25,21 @@ $env:DWI_PILOT_SUSPENDED_BOARDS = ""
 $env:DWI_PILOT_DATABASE_URL = "postgresql+psycopg://pilot_user:local_password@127.0.0.1:5432/dwi_local_pilot"
 ```
 
-Do not commit actual credentials or data. **This phase does not wire those settings to the ingestion CLI, run network requests, connect to PostgreSQL, or enable any live ingestion.** The existing `DWI_SOURCE_USE_APPROVED` persistence gate is unchanged.
+Do not commit actual credentials or data. The manual entrypoint `python -m app.ingestion.pilot_cli` now uses these controls. The original ingestion CLI and `DWI_SOURCE_USE_APPROVED` persistence gate remain unchanged. No source requests or database writes have been performed by these repository updates.
+
+## Manual entrypoint
+
+- Run `python -m app.ingestion.pilot_cli --board exampleboard --employer "Example Employer" --dry-run --execute` to fetch and validate metadata **without database writes**, after checking applicable access conditions and configuring the allowlist.
+- Persistence uses `--persist --execute` instead of `--dry-run --execute` and additionally requires `DWI_SOURCE_USE_APPROVED=1` and a dedicated `DWI_PILOT_DATABASE_URL` pointing at a separate local `_pilot` PostgreSQL database with migrations applied.
+- Both modes require `DWI_PILOT_ENABLED=1`, source allowlisting, and no suspension. Never put live records in public API or GitHub.
+- The dry-run prints aggregate validation counts only, not titles or job records. **Operator approval flags do not grant third-party rights.**
 
 ## Remaining implementation
 
-1. Wire the manual command into these fail-closed controls while preserving existing CLI behavior and tests.
-2. Require explicit source terms review and avoid new live requests until applicable source conditions are met; provide a non-persistent offline/synthetic test mode.
-3. Restrict retained fields; verify private database migrations and prevent public endpoints from selecting real records.
-4. Add stop/purge operations for a single source, with dependency-safe deletion ordering and operator confirmation.
-5. Test retry/backoff, data minimization, source attribution, dry run, PostgreSQL persistence, and end-to-end isolation. Verify CI before merging.
+1. Verify applicable source conditions and approved fields before live requests; evaluate whether explicit board-specific approval records are needed.
+2. Audit field minimization, private PostgreSQL migrations and public API isolation.
+3. Implement source-specific stop/purge operations with operator confirmation.
+4. Complete offline and PostgreSQL integration tests, verify CI, and review before merging.
 
 ## Outstanding rights question
 
