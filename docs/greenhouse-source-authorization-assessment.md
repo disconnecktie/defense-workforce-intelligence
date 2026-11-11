@@ -3,7 +3,7 @@
 **Assessment date:** 2026-11-11  
 **Telaryn reference:** TKT-CE8W-WSG2-C3D9  
 **Related implementation blocker:** TKT-003 (Greenhouse job ingestion)  
-**Intended use:** Personal, noncommercial research, engineering education, and portfolio demonstration. No sale of datasets, paid analytics, commercial service, or competing job board is planned. Public source code is intended; publication of collected third-party posting records is not an established requirement.\n**Status:** Preliminary research; authorization for live automated collection and retention NOT established.  
+**Intended use:** Personal, noncommercial research, engineering education, and portfolio demonstration. No sale of datasets, paid analytics, commercial service, or competing job board is planned. Public source code is intended; collected records should remain private and the product should direct visitors to original employer/Greenhouse sources rather than substitute for them.\n**Status:** Preliminary research; authorization for live automated collection and retention NOT established.  
 **Decision for new live collection, persistence, and public redistribution:** **NO-GO pending source-specific authorization and applicable terms review.**
 
 This assessment evaluates a personal noncommercial portfolio project, not a commercial data business. Public publication of code does not imply publication of real third-party data. This assessment is a project compliance risk control rather than legal advice. It must not be treated as a license to use any data. It does not modify the ingestion pipeline or enable any live persistence.
@@ -19,6 +19,17 @@ This assessment evaluates a personal noncommercial portfolio project, not a comm
 | [Greenhouse legal document directory](https://www.greenhouse.com/legal) | Clarifies that the customer MSA is incorporated into subscribing customers' order forms. | Does not itself confer an independent data license. |
 
 No employer-specific terms, signed permissions, or written approval have yet been obtained or verified. Employer-specific reviews are **pending** for each proposed board. Do not infer authorization from a site's lack of explicit restrictions.
+
+## Intended product boundary: analysis, not a substitute job board
+
+DWI is a **personal, noncommercial engineering portfolio and private research tool**. Its goal is to study observed employment signals and demonstrate ETL, provenance tracking, APIs, historical analysis, and dashboard development. It is **not** intended to compete with Greenhouse or to allow visitors to bypass employers' original job boards.
+
+- **Source attribution:** When permitted records are observed, retain the employer name, `platform=greenhouse`, board identifier/token, original source posting ID or URL, and first/last observation timestamps for provenance and auditability. Link users to the employer's original Greenhouse posting for the authoritative current listing, where an outward link is offered.
+- **Data minimization:** Prefer a limited metadata inventory for local research. Do not retain or republish full descriptions/HTML, application forms, applicant data, or bulk copies of listings as a portfolio feature.
+- **Derived analysis:** Prioritize observed posting counts, technology-title signals, source coverage, and ingestion-operation metrics. Clearly distinguish observed records from verified open vacancies, hires, closures, or measured hiring demand.
+- **Public presentation:** Show code, architecture, test fixtures, synthetic examples, and approved aggregates; do not expose a searchable mirror of real live postings or a downloadable employer dataset. Public real-data aggregates still require applicable rights analysis.
+- **Permitted-use gate:** Attribution, linkback, lack of monetization, and avoiding duplication **do not by themselves confer authorization** to automate collection or retain data historically. Confirm source-specific rules and any required permission before enabling new live ingestion/persistence.
+- **Change control:** If DWI later becomes a hosted service, paid tool, or publicly displays source records, reassess the applicable authorizations and security controls before changing the scope.
 
 ## Authorization matrix — as of 2026-11-11
 
