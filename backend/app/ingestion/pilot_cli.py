@@ -16,6 +16,7 @@ from app.db import make_session_factory
 from app.ingestion.greenhouse import fetch_jobs
 from app.ingestion.normalize import InvalidPosting, normalize_job
 from app.ingestion.pipeline import ingest_board
+from app.ingestion.pilot_metadata import minimized_feed
 from app.ingestion.pilot_policy import require_pilot_source, require_private_pilot_database
 
 
@@ -49,10 +50,11 @@ def main(argv: list[str] | None = None) -> int:
             make_session_factory(url),
             board_token=source.board_token,
             employer_name=source.employer,
+            fetcher=lambda token: minimized_feed(fetch_jobs(token)),
         )
         print(json.dumps({"mode": "private-local-pilot", **result.__dict__}, indent=2))
     else:
-        jobs = fetch_jobs(source.board_token)
+        jobs = minimized_feed(fetch_jobs(source.board_token))
         accepted = 0
         rejected = 0
         for raw in jobs:
