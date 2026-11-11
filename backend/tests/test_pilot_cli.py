@@ -96,5 +96,10 @@ def test_persist_routes_to_existing_pipeline_only_after_guards(configured, capsy
         "--persist", "--execute",
     ]) == 0
     factory.assert_called_once_with("postgresql://pilot:pw@localhost:5432/isolated_pilot")
-    ingest.assert_called_once_with(sentinel_factory, board_token="syntheticboard", employer_name="Synthetic Employer")
+    ingest.assert_called_once()
+    args, kwargs = ingest.call_args
+    assert args == (sentinel_factory,)
+    assert kwargs["board_token"] == "syntheticboard"
+    assert kwargs["employer_name"] == "Synthetic Employer"
+    assert callable(kwargs["fetcher"])
     assert json.loads(capsys.readouterr().out)["mode"] == "private-local-pilot"
