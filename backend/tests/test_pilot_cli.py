@@ -86,12 +86,8 @@ def test_persist_routes_to_existing_pipeline_only_after_guards(configured, capsy
     configured.setenv("DATABASE_URL", "postgresql://dwi:pw@localhost:5432/dwi")
     sentinel_factory = object()
     factory = Mock(return_value=sentinel_factory)
-    ingest = Mock(return_value=Mock(**{
-        "__dict__": {"run_id": 1, "status": "succeeded"},
-    }))
-    # Mock.__dict__ is not a safe custom fixture; use a simple namespace-like object.
     from types import SimpleNamespace
-    ingest.return_value = SimpleNamespace(run_id=1, status="succeeded")
+    ingest = Mock(return_value=SimpleNamespace(run_id=1, status="succeeded"))
     configured.setattr(pilot_cli, "make_session_factory", factory)
     configured.setattr(pilot_cli, "ingest_board", ingest)
     configured.setattr(pilot_cli, "fetch_jobs", Mock(side_effect=AssertionError("wrong fetch path")))
