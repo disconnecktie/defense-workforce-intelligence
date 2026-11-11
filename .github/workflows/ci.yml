@@ -45,7 +45,10 @@ jobs:
         with:
           node-version: "22"
       - name: Install frontend dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+        working-directory: frontend
+      - name: Run frontend component tests
+        run: npm test
         working-directory: frontend
       - name: Type-check and build
         run: npm run build

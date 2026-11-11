@@ -374,3 +374,44 @@ footer { padding-top: 24px; border-top: 1px solid #30415b; font-size: 12px; colo
   .ts-observed { padding: 14px 20px 20px; }
   .ts-disclaimer { padding: 17px 20px; }
 }
+
+
+/* TKT-011: synthetic ingestion history; summaries are page-scoped. */
+.ha-section { margin-top: 24px; background: #121e31; border: 1px solid #2e405b; border-radius: 18px; overflow: hidden; }
+.ha-filter-note { display: block; margin-top: 8px; color: #bfd8f5; font-size: 12px; overflow-wrap: anywhere; }
+.ha-overview { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; padding: 0 32px 24px; }
+.ha-stat { display: flex; flex-direction: column; gap: 9px; min-width: 0; padding: 20px; background: #19273c; border: 1px solid #35465e; border-radius: 12px; }
+.ha-stat > span { font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; color: #b0c0d6; }
+.ha-stat strong { font-size: clamp(1.65rem, 2.6vw, 2.4rem); font-variant-numeric: tabular-nums; letter-spacing: -.05em; }
+.ha-stat small { font-size: 12px; color: #8fa3c0; line-height: 1.5; }
+.ha-summary { border-top: 1px solid #2d405b; padding: 24px 32px 28px; }
+.ha-summary h3 { font-size: 15px; margin: 0 0 16px; }
+.ha-summary h3:not(:first-child) { margin-top: 28px; }
+.ha-counter-grid { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 10px; }
+.ha-counter { display: flex; flex-direction: column; gap: 7px; background: #142339; border: 1px solid #30465f; border-radius: 10px; padding: 14px; }
+.ha-counter span { font-size: 11px; color: #b0c0d6; }
+.ha-counter strong { font-size: 19px; font-variant-numeric: tabular-nums; }
+.ha-timeline { display: grid; gap: 12px; }
+.ha-day { display: grid; grid-template-columns: 110px minmax(0, 1fr) 70px; align-items: center; gap: 14px; font-size: 12px; color: #bbd0e9; }
+.ha-day strong { text-align: right; font-variant-numeric: tabular-nums; }
+.ha-bar-track { height: 13px; background: #293a52; border-radius: 8px; overflow: hidden; }
+.ha-bar-track > span { display: block; height: 100%; background: #7baefa; border-radius: inherit; }
+.ha-muted { color: #94accb; font-size: 12px; }
+.ha-table { min-width: 1400px; }
+.ha-table td { font-variant-numeric: tabular-nums; }
+.ha-table td:first-child { min-width: 215px; }
+.ha-employer-button { display: block; margin-top: 7px; }
+.ha-status { font-weight: 750; color: #d4e7ff; }
+.ha-finished { display: block; margin-top: 7px; color: #8da4c3; }
+.ha-disclaimer { border-top: 1px solid #2d405b; padding: 16px 32px 22px; background: #102033; color: #9fb5d3; font-size: 12px; line-height: 1.7; }
+.ha-disclaimer strong { color: #e1edfc; }
+@media (max-width: 900px) { .ha-counter-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 620px) {
+  .ha-overview { grid-template-columns: 1fr 1fr; gap: 9px; padding: 0 20px 20px; }
+  .ha-stat { padding: 15px; }
+  .ha-stat:first-child { grid-column: span 2; }
+  .ha-summary { padding: 20px; }
+  .ha-counter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .ha-day { grid-template-columns: 82px minmax(0,1fr) 54px; gap: 8px; font-size: 10px; }
+  .ha-disclaimer { padding: 17px 20px; }
+}

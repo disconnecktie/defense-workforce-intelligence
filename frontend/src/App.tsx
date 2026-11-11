@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import CoverageDashboard from './CoverageDashboard'
 import TitleSignalsDashboard from './TitleSignalsDashboard'
+import HistoricalActivityDashboard from './HistoricalActivityDashboard'
 import './styles.css'
 
 type ApiStatus = 'checking' | 'online' | 'offline'
@@ -408,6 +409,13 @@ export default function App() {
         apiBaseUrl={apiBaseUrl}
         employer={appliedEmployer}
         refreshKey={refreshKey}
+      />
+
+      <HistoricalActivityDashboard
+        apiBaseUrl={apiBaseUrl}
+        employer={appliedEmployer}
+        refreshKey={refreshKey}
+        onFilterEmployer={filterByEmployer}
       />
 
       <aside className="disclaimer">
