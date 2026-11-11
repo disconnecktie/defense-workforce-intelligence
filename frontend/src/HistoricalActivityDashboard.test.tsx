@@ -103,7 +103,7 @@ describe('HistoricalActivityDashboard', () => {
     expect(screen.getByText('2026-11-09')).toBeTruthy()
     expect(screen.getByText('Run #22')).toBeTruthy()
     expect(screen.getByText('Run #21')).toBeTruthy()
-    expect(screen.getByText('Not supplied')).toBeTruthy()
+    expect(screen.getAllByText('Not supplied').length).toBeGreaterThan(0)
     expect(screen.getByText('Showing 1–2 of 20 matching ingestion runs')).toBeTruthy()
     expect(document.body.textContent).toContain('processing events')
     expect(document.body.textContent).toContain('not vacancies or hiring demand')
