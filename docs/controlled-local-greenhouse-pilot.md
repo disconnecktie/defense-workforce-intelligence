@@ -14,7 +14,7 @@ This feature supports a personal, noncommercial local research pilot. DWI is not
 
 - `parse_allowlist`: parses an explicit JSON object mapping board tokens to employer names, rejecting malformed input, empty sources and duplicate normalized tokens.
 - `require_pilot_source`: requires `DWI_PILOT_ENABLED=1`, an allowlisted token and exact employer match, and rejects sources listed in `DWI_PILOT_SUSPENDED_BOARDS`.
-- `require_private_pilot_database`: requires an explicitly configured localhost PostgreSQL database whose name ends in `_pilot`, distinct from the application database. This check cannot replace operating-system, network, or PostgreSQL access controls.
+- `require_private_pilot_database`: requires an explicitly configured localhost PostgreSQL database whose name ends in `_pilot`, with a **different parsed database name** from the application database (credentials or host aliases alone do not count as isolation). Connection query overrides and nonstandard ports are refused. This check cannot replace operating-system, network, or PostgreSQL access controls.
 
 Example *configuration only* (not authorization to execute against the named board):
 
@@ -52,7 +52,7 @@ Deletion occurs in a single transaction, children first, and leaves records from
 
 The pilot CLI strips all upstream fields except posting ID, title, original posting URL, location name, and source update timestamp **before** the existing normalizer and database pipeline receive them. Employer, board token, and local observation timestamps are added by the established ingestion model. Full descriptions, applicant questions, offices, departments, internal job IDs, requisition IDs, and first-published dates are not retained by this pilot path. Synthetic tests verify stored snapshots exclude these extras.
 
-The pilot uses an explicitly separate local `_pilot` database. Existing `/api/v1` read endpoints use the application database and filter synthetic fixtures; this pilot does not change those routes. Do not point a publicly reachable API at the private pilot database. Database URL string checks and synthetic source naming are not substitutes for dedicated credentials and network isolation.
+The pilot uses an explicitly separate local `_pilot` database. Existing `/api/v1` read endpoints use the application database and filter synthetic fixtures; this pilot does not change those routes. Do not point a publicly reachable API at the private pilot database. Parsed database-name checks and synthetic source naming are not substitutes for dedicated credentials, PostgreSQL privileges, and network isolation.
 
 ## Remaining implementation
 
