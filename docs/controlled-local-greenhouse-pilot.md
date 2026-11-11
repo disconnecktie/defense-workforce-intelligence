@@ -48,6 +48,12 @@ Use `python -m app.ingestion.pilot_purge_cli` on the dedicated private pilot dat
 
 Deletion occurs in a single transaction, children first, and leaves records from other boards untouched. Orphan employers are removed only if no remaining source refers to them. The purge is designed for a quiescent source; suspend all ingestion for that board before executing it. This deletes application database records, **not external backups, logs, archives, or Git history**; those require separate retention review.
 
+## Field minimization and read boundary
+
+The pilot CLI strips all upstream fields except posting ID, title, original posting URL, location name, and source update timestamp **before** the existing normalizer and database pipeline receive them. Employer, board token, and local observation timestamps are added by the established ingestion model. Full descriptions, applicant questions, offices, departments, internal job IDs, requisition IDs, and first-published dates are not retained by this pilot path. Synthetic tests verify stored snapshots exclude these extras.
+
+The pilot uses an explicitly separate local `_pilot` database. Existing `/api/v1` read endpoints use the application database and filter synthetic fixtures; this pilot does not change those routes. Do not point a publicly reachable API at the private pilot database. Database URL string checks and synthetic source naming are not substitutes for dedicated credentials and network isolation.
+
 ## Remaining implementation
 
 1. Verify applicable source conditions and approved fields before live requests; evaluate whether explicit board-specific approval records are needed.
