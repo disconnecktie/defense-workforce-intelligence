@@ -127,6 +127,10 @@ The React UI now adds a **Technology title mentions** panel powered by GET /api/
 
 **These are literal technology words in synthetic job titles, not verified required skills or market demand.** The existing ingestion records metadata only, and job descriptions are not used or inferred. The endpoint is still explicitly local-only, opt-in and restricted to synthetic CI sources. See the [Technology Title Signals Dashboard walkthrough](docs/technology-title-signals-dashboard.md) to test the local React view and the [API contract](docs/title-signals-api.md) to interpret the results.
 
+## Synthetic ingestion run history (development preview)
+
+The read-only `GET /api/v1/ingestion-history` endpoint exposes per-run ingestion outcomes (inserted, updated, unchanged, rejected and errors), ordered newest-first, for the same strictly synthetic source population as the other local API views. **Run counts are processing events, not current vacancies or market-demand trends.** It inherits the default-off `DWI_POSTINGS_API_ENABLED=1` local-only gate and never retrieves raw error messages. See [ingestion history API](docs/ingestion-history-api.md) for the contract and local validation checklist.
+
 ## Planned MVP
 
 1. Collect public job postings from a small cohort of permitted sources.

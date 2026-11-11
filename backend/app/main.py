@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.postings import router as postings_router
 from app.api.coverage import router as coverage_router
 from app.api.title_signals import router as title_signals_router
+from app.api.ingestion_history import router as ingestion_history_router
 
 app = FastAPI(
     title="Defense Workforce Intelligence API",
@@ -36,6 +37,7 @@ app.add_middleware(
 app.include_router(postings_router)
 app.include_router(coverage_router)
 app.include_router(title_signals_router)
+app.include_router(ingestion_history_router)
 
 
 @app.get("/health", tags=["health"])
