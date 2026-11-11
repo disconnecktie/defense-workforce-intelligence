@@ -15,7 +15,7 @@ This assessment evaluates a personal noncommercial portfolio project, not a comm
 | [Official Greenhouse Job Board API documentation](https://docs.greenhouse.io/job-board) | GET requests for public job board data require no authentication; `GET /v1/boards/{board_token}/jobs` lists published posts; optional `content=true` includes richer post content. | Public technical availability does not provide a third-party license for systematic collection, archival, resale, or redistribution. |
 | [Greenhouse API overview](https://support.greenhouse.io/hc/en-us/articles/10568627186203-Greenhouse-API-overview) (updated 2026-11-02) | Job Board API intended for custom career sites displaying an organization's posts; requests may be rate-limited. | Does not state a universally applicable numerical rate limit or blanket permission for independent aggregation. |
 | [Greenhouse Master Subscription Agreement](https://www.greenhouse.com/master-subscription-agreement) (updated 2026-02-01) | Signed-order-form customers receive limited internal-use rights; agreement sets restrictions on resale, transfer, third-party benefit and competitive use of services. | The MSA defines customer obligations; do not assume DWI is a customer or that these restrictions directly govern all unauthenticated public GET requests. |
-| [Greenhouse User Agreement](https://my.greenhouse.io/users/agreement) | Contains restrictions on automated means, competing services, and monetizing service-related data. | Assess its precise coverage of `my.greenhouse.io` users vs public Job Board API before treating it as directly binding DWI. |
+| [My Greenhouse User Agreement](https://my.greenhouse.io/users/agreement) (effective 2025-01-29) | Section 3 restricts automated means, competing products, and monetization of the **My Greenhouse** service. | Section introduction explicitly defines the governed service as My Greenhouse; these restrictions must not be automatically extended to unauthenticated Job Board API GET endpoints without further authority. |
 | [Greenhouse legal document directory](https://www.greenhouse.com/legal) | Clarifies that the customer MSA is incorporated into subscribing customers' order forms. | Does not itself confer an independent data license. |
 
 No employer-specific terms, signed permissions, or written approval have yet been obtained or verified. Employer-specific reviews are **pending** for each proposed board. Do not infer authorization from a site's lack of explicit restrictions.
@@ -49,6 +49,19 @@ DWI is a **personal, noncommercial engineering portfolio and private research to
 | Personal information in job descriptions/contact fields | May appear in freely formatted content | **Not cleared** | Avoid collection; define minimization and deletion rules before any live data |
 | Application forms / applicant or candidate data | Separate POST may require authentication | **Out of scope** | Never ingest applicants, applications, demographic answers, or candidate information |
 
+## Limited research collection design — proposed, not yet authorized
+
+- **Purpose:** Individual, noncommercial local analysis for an engineering portfolio; show public code and synthetic examples rather than a replica of employer job boards.
+- **Access path:** The documented GET `/v1/boards/{board_token}/jobs` endpoint; no authenticated Harvest endpoints, job application POSTs, scraping behind controls, or candidate data.
+- **Proposed fields:** Source employer name, `platform`, `board_token`, job-post `id`, title, location name, `updated_at`, `absolute_url`, and local observation timestamp. Do not fetch `content=true`, full descriptions, application questions, free-text fields, or candidate data.
+- **Attribution:** Preserve exact source identity and original URL; distinguish first/last observation from actual job creation/closure or hiring. Link out rather than mirror live postings.
+- **Storage:** Private local database only if source-specific historical retention is permitted. No real records in public Git history, test fixtures, publicly hosted dashboards, or downloadable datasets.
+- **Polling:** No numeric allowance has been established. If permission is granted, define a narrow, explicit interval, honor rate limits and `429`/`Retry-After`, apply exponential backoff, and stop on objections.
+- **Retention:** No authorized number of days has been established. Obtain explicit retention/deletion conditions before persisting real records, including removal on source withdrawal and correction/takedown handling.
+- **Public output:** Synthetic demo data and code only as the default. Real-data aggregates would require a separate confirmation of permissible publication.
+
+**Gate:** These are minimization and engineering proposals, not permissions. TKT-003's live-data persistence authorization remains open.
+
 ## Outstanding authorization questions (for Greenhouse and each employer)
 
 1. May an individual developer retrieve published Job Board API listing metadata for personal, noncommercial, local research and a portfolio demonstration?
@@ -61,17 +74,31 @@ DWI is a **personal, noncommercial engineering portfolio and private research to
 
 Document responses with respondent role, exact scope, date, affected boards, any expiration, and links to the signed permission record; do not commit private correspondence or sensitive contact data to a public repository without authorization.
 
+## Source-owner clarification request (not yet sent)
+
+Subject: Public Job Board API — personal noncommercial metadata research
+
+Hello Greenhouse team,
+
+I'm developing Defense Workforce Intelligence (DWI), a personal, noncommercial engineering portfolio project. I would like to analyze a small number of published job-post metadata records using your documented public Job Board API. DWI is not intended to replace Greenhouse job boards, sell datasets, or provide job applications. Public demonstrations would use synthetic data and link to original employer listings rather than republish full descriptions.
+
+Could you clarify whether periodic unauthenticated GET requests for selected employers' public job-post metadata are allowed for this personal research, including local retention of titles, identifiers, location, source URLs, update and observation timestamps for historical analysis? If allowed, are there applicable restrictions on which fields may be stored, polling frequency, duration of retention, attribution, deletion on withdrawal, and publication of aggregated findings? Does approval need to come from Greenhouse, each employer, or both? Please direct me to any terms governing third-party use of public Job Board API data.
+
+Thank you.
+
+**Send status:** Draft only; no outreach has been sent by this repository update. Preserve any reply privately and record only non-sensitive scope/decision metadata in the public assessment.
+
 ## Decision logic / next actions
 
 - **Current NO-GO (conservative project gate):** Do not activate TKT-003 automated live persistence, recurring ingestion, or third-party data redistribution before applicable terms and use rights are established. This is not a conclusion that noncommercial research is prohibited.
-- **Potential conditional GO:** Only after documented source-level rights, approved field inventory, request limits, retention/deletion policy, and verification of the scope of any required permissions. Scope authorization to each named source and use case.
+- **Potential conditional GO:** Only after applicable source conditions are resolved for this personal noncommercial use, with an approved field inventory, request limits, retention/deletion policy, and any required authorization. Scope clearance to named sources and this specific use case; do not treat noncommercial status alone as a license.
 - **Alternative:** Continue using synthetic fixtures and demonstrate code, testing, architecture, and dashboards without publishing real job records. If live historical data is essential, investigate sources permitting personal research and retention or seek clarification from individual source owners.
 - **TKT-003 relationship:** Keep its source-use authorization acceptance criterion open until the approvals are documented; completion of research alone does NOT constitute permission.
 - **Technical controls:** Leave current synthetic-only gates and disabled-by-default behavior unchanged; no modification to code or infrastructure is authorized by TKT-012.
 
 ## Scope distinctions for decision-making\n\n1. **Public GitHub code and synthetic screenshots:** The stated portfolio goal, with no need to expose real posting records. Continue.\n2. **Personal, noncommercial local analysis of public metadata:** Lower redistribution exposure than a public dataset, but automated access and retention conditions remain to be reviewed. Not assumed automatically permitted or prohibited.\n3. **Publicly hosted dashboard using real employer records:** A separate, optional use case; not part of the currently stated scope. Assess again if pursued.\n4. **Selling data, paid analytics, or a competing product:** Explicitly outside scope. Do not characterize DWI as intending these uses.\n\n## Remaining review required before final sign-off
 
-- Confirm applicable Greenhouse terms for DWI's exact access pattern with the source owner or qualified counsel.
+- Confirm applicable Greenhouse terms for DWI's exact access pattern with the source owner or qualified counsel; draft outreach is included above but not sent.
 - Review terms of each target employer's own career website/job board, including any robots policy where relevant.
 - Obtain written, scoped authorization or select alternative sources with a clear affirmative data license.
 - Review and approve any finalized authorization matrix, explicit polling budgets, retention/deletion procedures, and operational controls.
