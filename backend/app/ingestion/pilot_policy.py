@@ -26,11 +26,14 @@ def parse_allowlist(raw: str | None) -> dict[str, PilotSource]:
     """
     if not raw:
         raise ValueError("DWI_PILOT_ALLOWLIST is required.")
+    class JsonPairs(list):
+        pass
+
     try:
-        pairs = json.loads(raw, object_pairs_hook=lambda entries: entries)
+        pairs = json.loads(raw, object_pairs_hook=JsonPairs)
     except (ValueError, TypeError) as exc:
         raise ValueError("DWI_PILOT_ALLOWLIST must be valid JSON.") from exc
-    if not isinstance(pairs, list):
+    if not isinstance(pairs, JsonPairs):
         raise ValueError("DWI_PILOT_ALLOWLIST must be a JSON object.")
     result: dict[str, PilotSource] = {}
     for pair in pairs:
@@ -82,6 +85,7 @@ def require_private_pilot_database(*, environ=None) -> str:
         raise ValueError("Pilot database name must end in _pilot.")
     if not parsed.username or not parsed.password:
         raise ValueError("Pilot database requires explicit credentials.")
-    if url == env.get("DATABASE_URL"):
+    from app.db import database_url
+    if url.replace("postgresql://", "postgresql+psycopg://", 1) == database_url():
         raise ValueError("Pilot database must be separate from application database.")
     return url
