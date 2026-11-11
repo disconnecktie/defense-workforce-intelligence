@@ -34,11 +34,25 @@ Do not commit actual credentials or data. The manual entrypoint `python -m app.i
 - Both modes require `DWI_PILOT_ENABLED=1`, source allowlisting, and no suspension. Never put live records in public API or GitHub.
 - The dry-run prints aggregate validation counts only, not titles or job records. **Operator approval flags do not grant third-party rights.**
 
+## Source-specific purge
+
+Use `python -m app.ingestion.pilot_purge_cli` on the dedicated private pilot database. It makes **no external network requests** and works even when collection is suspended. It requires an exact entry in `DWI_PILOT_ALLOWLIST` and the separate `DWI_PILOT_DATABASE_URL` (database name ending `_pilot`).
+
+```powershell
+# Preview counts, with no database changes:
+.\.venv\Scripts\python.exe -m app.ingestion.pilot_purge_cli --board exampleboard --employer "Example Employer"
+
+# Irreversibly delete that source, its posting observations, posts and ingestion runs:
+.\.venv\Scripts\python.exe -m app.ingestion.pilot_purge_cli --board exampleboard --employer "Example Employer" --confirm exampleboard
+```
+
+Deletion occurs in a single transaction, children first, and leaves records from other boards untouched. Orphan employers are removed only if no remaining source refers to them. The purge is designed for a quiescent source; suspend all ingestion for that board before executing it. This deletes application database records, **not external backups, logs, archives, or Git history**; those require separate retention review.
+
 ## Remaining implementation
 
 1. Verify applicable source conditions and approved fields before live requests; evaluate whether explicit board-specific approval records are needed.
 2. Audit field minimization, private PostgreSQL migrations and public API isolation.
-3. Implement source-specific stop/purge operations with operator confirmation.
+3. Verify purge behavior against an isolated PostgreSQL instance and strengthen protection against concurrent ingestion during purge.
 4. Complete offline and PostgreSQL integration tests, verify CI, and review before merging.
 
 ## Outstanding rights question
