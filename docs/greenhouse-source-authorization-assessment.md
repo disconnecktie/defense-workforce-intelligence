@@ -3,10 +3,10 @@
 **Assessment date:** 2026-11-11  
 **Telaryn reference:** TKT-CE8W-WSG2-C3D9  
 **Related implementation blocker:** TKT-003 (Greenhouse job ingestion)  
-**Status:** Preliminary research; authorization NOT established.  
+**Intended use:** Personal, noncommercial research, engineering education, and portfolio demonstration. No sale of datasets, paid analytics, commercial service, or competing job board is planned. Public source code is intended; publication of collected third-party posting records is not an established requirement.\n**Status:** Preliminary research; authorization for live automated collection and retention NOT established.  
 **Decision for new live collection, persistence, and public redistribution:** **NO-GO pending source-specific authorization and applicable terms review.**
 
-This assessment is a product/compliance risk control rather than legal advice. It must not be treated as a license to use any data. It does not modify the ingestion pipeline or enable any live persistence.
+This assessment evaluates a personal noncommercial portfolio project, not a commercial data business. Public publication of code does not imply publication of real third-party data. This assessment is a project compliance risk control rather than legal advice. It must not be treated as a license to use any data. It does not modify the ingestion pipeline or enable any live persistence.
 
 ## Source register (reviewed 2026-11-11)
 
@@ -30,8 +30,8 @@ No employer-specific terms, signed permissions, or written approval have yet bee
 | Capture employer name and source attribution | Public board information | **Unconfirmed for persistent analytics** | Preserve source references in synthetic prototype; verify each real employer's terms before live collection |
 | Retain raw job descriptions and HTML content | Optional API content parameter | **Unconfirmed; higher reuse and intellectual-property risk** | Exclude from proposed initial authorized inventory |
 | Store job-post metadata or historical snapshots | API returns observations, not a grant to archive | **Unconfirmed** | **NO-GO** until permissible duration, removal rules, and scope are documented |
-| Publish a searchable job listing directory or re-display postings | Data technically visible on original boards | **Unconfirmed** | **NO-GO** until explicit redistribution/public display rights are established |
-| Produce derived title, technology, coverage, or hiring analytics | Could be computed technically | **Unconfirmed for published commercial/public-facing outputs** | **NO-GO** for live-derived public output until permitted use is agreed and privacy/IP risk reviewed |
+| Publish a searchable listing directory or re-display full job content | Data technically visible on original boards | **Unconfirmed; not needed for stated personal portfolio goal** | **Out of scope for current project**, no public reposting of live employer records |
+| Compute personal noncommercial title, technology, or coverage analyses | Could be computed technically | **Automated sourcing and retention permissions unconfirmed** | Keep current live-data gate off pending access and retention review; separate private analysis from public display |
 | Rate/frequency of job-board API polling | Requests may be rate-limited | **No universal numeric threshold verified** | Do not assign an invented threshold; obtain permissible request cadence from source owner |
 | Source attribution and linkback | Posting URLs supplied by API | **Exact required license/attribution text unconfirmed** | Proposed: preserve employer name, board, original URL, and observation timestamp; confirm written requirements |
 | Retention and deletion | API documentation does not authorize archival period | **No permitted duration identified** | Do not invent retention window; obtain approved retention period and takedown process first |
@@ -40,25 +40,25 @@ No employer-specific terms, signed permissions, or written approval have yet bee
 
 ## Outstanding authorization questions (for Greenhouse and each employer)
 
-1. May an independent commercial or public-facing third-party product automatically retrieve the published Job Board API job listing metadata for that employer?
-2. May DWI store metadata persistently, create historical snapshots, compute aggregate metrics, and publish derived analyses? Does this differ from reproducing listings?
+1. May an individual developer retrieve published Job Board API listing metadata for personal, noncommercial, local research and a portfolio demonstration?
+2. May DWI store limited metadata locally, create historical snapshots, and compute private noncommercial metrics? Does publicly showing only architecture, synthetic examples, or aggregated findings change the permitted use?
 3. Which metadata fields are permitted, and are full descriptions, logos, salary information or source URLs restricted?
 4. What polling frequency, request-rate ceiling, backoff, and attribution/linkback are required?
 5. What retention term, stale-post removal/deletion, correction, and takedown requirements apply?
 6. Is written permission required from Greenhouse, the employer, or both? Which contract or policy governs unauthenticated public GET requests?
-7. May DWI provide paid/monetized analytics derived from permitted data?
+7. Are there restrictions specific to personal/noncommercial research, and what additional requirements would apply only if the project later became commercial?
 
 Document responses with respondent role, exact scope, date, affected boards, any expiration, and links to the signed permission record; do not commit private correspondence or sensitive contact data to a public repository without authorization.
 
 ## Decision logic / next actions
 
-- **Current NO-GO:** Do not activate TKT-003 live persistence, recurring ingestion, any public employer-data dashboards, or redistribution.
+- **Current NO-GO (conservative project gate):** Do not activate TKT-003 automated live persistence, recurring ingestion, or third-party data redistribution before applicable terms and use rights are established. This is not a conclusion that noncommercial research is prohibited.
 - **Potential conditional GO:** Only after documented source-level rights, approved field inventory, request limits, retention/deletion policy, and verification of the scope of any required permissions. Scope authorization to each named source and use case.
-- **Alternative:** Evaluate data providers offering an explicit redistribution/analytics license or establish direct employer partnerships if Greenhouse rights cannot be confirmed.
+- **Alternative:** Continue using synthetic fixtures and demonstrate code, testing, architecture, and dashboards without publishing real job records. If live historical data is essential, investigate sources permitting personal research and retention or seek clarification from individual source owners.
 - **TKT-003 relationship:** Keep its source-use authorization acceptance criterion open until the approvals are documented; completion of research alone does NOT constitute permission.
 - **Technical controls:** Leave current synthetic-only gates and disabled-by-default behavior unchanged; no modification to code or infrastructure is authorized by TKT-012.
 
-## Remaining review required before final sign-off
+## Scope distinctions for decision-making\n\n1. **Public GitHub code and synthetic screenshots:** The stated portfolio goal, with no need to expose real posting records. Continue.\n2. **Personal, noncommercial local analysis of public metadata:** Lower redistribution exposure than a public dataset, but automated access and retention conditions remain to be reviewed. Not assumed automatically permitted or prohibited.\n3. **Publicly hosted dashboard using real employer records:** A separate, optional use case; not part of the currently stated scope. Assess again if pursued.\n4. **Selling data, paid analytics, or a competing product:** Explicitly outside scope. Do not characterize DWI as intending these uses.\n\n## Remaining review required before final sign-off
 
 - Confirm applicable Greenhouse terms for DWI's exact access pattern with the source owner or qualified counsel.
 - Review terms of each target employer's own career website/job board, including any robots policy where relevant.
