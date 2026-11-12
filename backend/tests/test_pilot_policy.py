@@ -32,14 +32,15 @@ def test_disabled_and_suspended_sources_are_blocked():
 
 def test_private_pilot_database_is_distinct_and_local(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "postgresql://dwi:pw@localhost:5432/dwi")
-    good = {"DWI_PILOT_DATABASE_URL": "postgresql://pilot:pw@localhost:5432/dwi_local_pilot"}
+    good = {"DWI_PILOT_DATABASE_URL": "postgresql://pilot:pw@localhost:5434/dwi_local_pilot"}
     assert require_private_pilot_database(environ=good).endswith("dwi_local_pilot")
     for bad in [
         "postgresql://pilot:pw@remote.example:5432/dwi_pilot",
         "postgresql://pilot:pw@localhost:5432/dwi",
         "postgresql://dwi:pw@localhost:5432/dwi",
         "postgresql://different:another@127.0.0.1/dwi",
-        "postgresql://pilot:pw@localhost:5432/dwi_local_pilot?host=remote.example",
+        "postgresql://pilot:pw@localhost:5434/dwi_local_pilot?host=remote.example",
+        "postgresql://pilot:pw@localhost:5432/dwi_local_pilot",
         "postgresql://pilot:pw@localhost:6543/dwi_local_pilot",
         "sqlite:///dwi_pilot",
         "postgresql://pilot@localhost:5432/dwi_pilot",
@@ -57,7 +58,7 @@ def test_different_credentials_cannot_alias_application_database(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://app:password@127.0.0.1:5432/shared_pilot")
     with pytest.raises(ValueError, match="different database name"):
         require_private_pilot_database(environ={
-            "DWI_PILOT_DATABASE_URL": "postgresql://another:secret@localhost/shared_pilot",
+            "DWI_PILOT_DATABASE_URL": "postgresql://another:secret@localhost:5434/shared_pilot",
         })
 
 

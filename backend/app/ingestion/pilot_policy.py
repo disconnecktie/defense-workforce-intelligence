@@ -87,8 +87,8 @@ def require_private_pilot_database(*, environ=None) -> str:
         raise ValueError("Pilot storage requires a PostgreSQL URL.")
     if pilot.host not in ("127.0.0.1", "localhost", "::1"):
         raise ValueError("Pilot database must be local-only.")
-    if pilot.port not in (None, 5432):
-        raise ValueError("Pilot database must use the expected local PostgreSQL port 5432.")
+    if pilot.port != 5434:
+        raise ValueError("Isolated pilot PostgreSQL must use the dedicated localhost port 5434.")
     if not pilot.database or not pilot.database.endswith("_pilot") or "/" in pilot.database:
         raise ValueError("Pilot database name must end in _pilot.")
     if not pilot.username or not pilot.password:

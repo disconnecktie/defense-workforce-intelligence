@@ -70,7 +70,7 @@ def test_purge_preserves_shared_employer(factory):
 
 def test_purge_cli_refuses_mismatch_before_db(monkeypatch):
     monkeypatch.setenv("DWI_PILOT_ALLOWLIST", '{"alpha":"Alpha LLC"}')
-    monkeypatch.setenv("DWI_PILOT_DATABASE_URL", "postgresql://pilot:pw@localhost/isolated_pilot")
+    monkeypatch.setenv("DWI_PILOT_DATABASE_URL", "postgresql://pilot:pw@localhost:5434/isolated_pilot")
     factory = Mock(side_effect=AssertionError("database forbidden"))
     monkeypatch.setattr(pilot_purge_cli, "make_session_factory", factory)
     with pytest.raises(SystemExit) as error:
@@ -81,7 +81,7 @@ def test_purge_cli_refuses_mismatch_before_db(monkeypatch):
 
 def test_purge_cli_default_is_preview_and_confirm_is_required(monkeypatch, capsys):
     monkeypatch.setenv("DWI_PILOT_ALLOWLIST", '{"alpha":"Alpha LLC"}')
-    monkeypatch.setenv("DWI_PILOT_DATABASE_URL", "postgresql://pilot:pw@localhost/isolated_pilot")
+    monkeypatch.setenv("DWI_PILOT_DATABASE_URL", "postgresql://pilot:pw@localhost:5434/isolated_pilot")
     monkeypatch.setenv("DATABASE_URL", "postgresql://dwi:pw@localhost/dwi")
     from app.ingestion.pilot_purge import PurgeCounts
     factory = object()

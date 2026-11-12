@@ -82,7 +82,7 @@ def test_persist_requires_source_review_and_private_database(configured):
 
 def test_persist_routes_to_existing_pipeline_only_after_guards(configured, capsys):
     configured.setenv("DWI_SOURCE_USE_APPROVED", "1")
-    configured.setenv("DWI_PILOT_DATABASE_URL", "postgresql://pilot:pw@localhost:5432/isolated_pilot")
+    configured.setenv("DWI_PILOT_DATABASE_URL", "postgresql://pilot:pw@localhost:5434/isolated_pilot")
     configured.setenv("DATABASE_URL", "postgresql://dwi:pw@localhost:5432/dwi")
     sentinel_factory = object()
     factory = Mock(return_value=sentinel_factory)
@@ -95,7 +95,7 @@ def test_persist_routes_to_existing_pipeline_only_after_guards(configured, capsy
         "--board", "SYNTHETICBOARD", "--employer", "Synthetic Employer",
         "--persist", "--execute",
     ]) == 0
-    factory.assert_called_once_with("postgresql://pilot:pw@localhost:5432/isolated_pilot")
+    factory.assert_called_once_with("postgresql://pilot:pw@localhost:5434/isolated_pilot")
     ingest.assert_called_once()
     args, kwargs = ingest.call_args
     assert args == (sentinel_factory,)
