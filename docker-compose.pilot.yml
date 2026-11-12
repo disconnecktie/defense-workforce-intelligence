@@ -1,0 +1,28 @@
+# Separate local PostgreSQL INSTANCE for the private research pilot.
+# Start with: docker compose -f docker-compose.pilot.yml up -d
+# Requires PILOT_ADMIN_PASSWORD and PILOT_APP_PASSWORD in ignored .env.pilot
+# or in the shell. Never attach this service to a public application network.
+name: dwi-local-pilot
+
+services:
+  pilot-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dwi_local_pilot
+      POSTGRES_USER: pilot_admin
+      POSTGRES_PASSWORD: ${PILOT_ADMIN_PASSWORD:?Set a unique PILOT_ADMIN_PASSWORD for the isolated pilot}
+      PILOT_APP_PASSWORD: ${PILOT_APP_PASSWORD:?Set a unique PILOT_APP_PASSWORD for the isolated pilot}
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - pilot_pgdata:/var/lib/postgresql/data
+      - ./backend/scripts/pilot-init-roles.sh:/docker-entrypoint-initdb.d/10-pilot-roles.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pilot_admin -d dwi_local_pilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pilot_pgdata:
