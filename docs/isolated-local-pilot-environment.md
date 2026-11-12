@@ -59,7 +59,7 @@ The smoke test creates synthetic sources, verifies observations and source-speci
 
 ## Validate credential separation
 
-Test the connection permissions with local `psql` or a short `psycopg.connect` check **without printing passwords**. The pilot app role must connect to `dwi_local_pilot`; a DWI main-app role should fail to authenticate to port 5434, and `pilot_app` should fail to authenticate to the **main** PostgreSQL server on port 5432. Confirm `current_user` is `pilot_app` and `rolsuper` is false.
+Set `DATABASE_URL` to the normal local DWI development database and `DWI_PILOT_DATABASE_URL` to the dedicated pilot URL, then run `python scripts/pilot_isolation_check.py` from `backend`. It reports only PASS/FAIL and no credentials. The script verifies that each role is denied access to the other PostgreSQL instance. The pilot app role must connect to `dwi_local_pilot`; a DWI main-app role should fail to authenticate to port 5434, and `pilot_app` should fail to authenticate to the **main** PostgreSQL server on port 5432. Confirm `current_user` is `pilot_app` and `rolsuper` is false.
 
 ## Stop, restore and reset
 
